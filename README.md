@@ -1,7 +1,7 @@
 # Fedoracheatsheet
 The Fedora Cheat Sheet
 
-A rudementary web app for studying, memorizing and executing commands and tasks in the Fedora linux distibution.
+A rudementary webapp for studying, memorizing and executing commands and tasks in the Fedora linux distibution.
 
 Made for the course "LNX" linux, at the vocational school of Noroff Oslo. The shool material encorages making cheat sheets, so here goes. 
 
