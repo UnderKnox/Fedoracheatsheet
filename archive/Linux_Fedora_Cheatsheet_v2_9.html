@@ -5,153 +5,174 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Linux Fedora — Command Cheat Sheet</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700;800&display=swap');
+  /* ══ v2.9 visual rework — one job per color, one color per job ══
+     Layers (see claude.md "Visual system"):
+       1 neutrals  2 module identity  3 interactive accent (--accent, nothing else)
+       4 code syntax (code/pre/mono diagram boxes only)  5 callouts are neutral
+       6 diagram-local palettes (each labeled inside its own diagram)
+     Fonts: no @import — the sheet is fully offline; font stacks fall back to system fonts. */
   :root {
+    /* neutrals — layout and default text */
     --bg:#0d1117; --surface:#161b22; --card:#1c2333; --border:#30363d;
-    --accent:#58a6ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
-    --purple:#bc8cff; --orange:#e3b341; --cyan:#39d353; --text:#e6edf3;
-    --muted:#8b949e; --code-bg:#0d1117; --tip-bg:#1f2d3d; --warn-bg:#2d1e1e;
+    --text:#e6edf3; --muted:#8b949e; --code-bg:#0d1117;
+    /* interactive accent — links, focus, search, scrollspy, hover. Nothing else. */
+    --accent:#58a6ff;
+    /* module identity — bands, tag rows, band labels, module badges. Nothing else. */
+    --band-m1:#00ff41; --band-m2:#3b82f6; --band-m3:#c2410c; --band-m4:#bc8cff; --band-ex:#eab308;
+    /* code syntax — only inside code, pre, and monospace diagram boxes */
+    --code-cmd:#3fb950; --code-flag:#e3b341; --code-arg:#bc8cff; --code-out:#8b949e; --code-path:#79c0ff;
+    /* diagram-local palette — meaning exists only inside a labeled diagram */
+    --danger:#f85149;        /* root / destructive: root prompt, SIGKILL, easter-egg frame */
+    --perm-type:#d29922; --perm-owner:#f85149; --perm-group:#3fb950; --perm-other:#79c0ff;
+    --stream-in:#3fb950; --stream-out:#79c0ff; --stream-err:#f85149;
+    --sig-term:#e3b341; --sig-hup:#79c0ff;
+    --vim-normal:#e3b341; --vim-insert:#3fb950; --vim-visual:#bc8cff; --vim-command:#79c0ff;
+    --glad-g:#3fb950; --glad-l:#79c0ff; --glad-a:#e3b341; --glad-d:#bc8cff;
+    /* type scale — the ONLY font sizes on the page (8 tokens max, per claude.md) */
+    --fs-title:2rem;      /* page h1 */
+    --fs-display:1.5rem;  /* big diagram numerals (octal, GLAD, signals, streams…) */
+    --fs-h2:1.1rem;       /* section headings + icon-sized accents */
+    --fs-body:.9rem;      /* tables, callouts, prose inside components */
+    --fs-h3:.85rem;       /* sub-headings + compact UI text */
+    --fs-code:.83rem;     /* code, pre, monospace diagrams */
+    --fs-small:.75rem;    /* badges, labels, th, fine print */
+    --fs-micro:.68rem;    /* tiny in-diagram descriptions */
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:2rem 1.5rem;max-width:1100px;margin:0 auto}
-  header{border-bottom:2px solid var(--accent);padding-bottom:1.5rem;margin-bottom:2.5rem}
-  header h1{font-size:2rem;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
-  header p{color:var(--muted);font-size:0.9rem;margin-top:0.3rem}
+  body{font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:2rem 1.5rem;max-width:1100px;margin:0 auto}
+  header{padding-bottom:.9rem;margin-bottom:2rem}
+  header h1{font-size:var(--fs-title);font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+  header p{color:var(--muted);font-size:var(--fs-body);margin-top:0.3rem}
   a.tag{text-decoration:none;cursor:pointer}
   a.tag:hover{color:var(--accent);border-color:var(--accent)}
-  .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:.15rem .7rem;font-size:.78rem;color:var(--muted);margin-right:.4rem;margin-top:.5rem}
-  h2{font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
-  h3{font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:1.2rem 0 .6rem}
+  .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:.05rem .55rem;font-size:var(--fs-small);color:var(--muted)}
+  h2{font-size:var(--fs-h2);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
+  h3{font-size:var(--fs-h3);font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text);margin:1.2rem 0 .6rem}
   .tbl-wrap{overflow-x:auto;margin-bottom:1rem}
-  table{width:100%;border-collapse:collapse;font-size:.88rem}
-  th{background:var(--surface);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;padding:.55rem .8rem;text-align:left;border-bottom:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:var(--fs-body)}
+  th{background:var(--surface);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:var(--fs-small);letter-spacing:1px;padding:.55rem .8rem;text-align:left;border-bottom:1px solid var(--border)}
   td{padding:.5rem .8rem;border-bottom:1px solid var(--border);vertical-align:top}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:var(--surface)}
-  code{font-family:'JetBrains Mono',monospace;background:var(--code-bg);border:1px solid var(--border);padding:.1rem .45rem;border-radius:4px;font-size:.83rem;color:var(--green);white-space:nowrap}
-  td:first-child code{color:var(--cyan)}
-  pre{background:var(--code-bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.83rem;color:var(--text);margin:.8rem 0;line-height:1.7}
-  pre .comment{color:var(--muted)}
-  pre .cmd{color:var(--cyan)}
-  pre .flag{color:var(--orange)}
-  pre .arg{color:var(--purple)}
-  pre .output{color:var(--muted);font-style:italic}
-  .tip,.warn,.info{border-radius:6px;padding:.75rem 1rem;margin:.8rem 0;font-size:.87rem;display:flex;gap:.6rem;align-items:flex-start}
-  .tip{background:var(--tip-bg);border-left:3px solid var(--green)}
-  .warn{background:var(--warn-bg);border-left:3px solid var(--red)}
-  .info{background:var(--surface);border-left:3px solid var(--accent)}
-  .tip .icon{color:var(--green);font-size:1rem;line-height:1.6}
-  .warn .icon{color:var(--red);font-size:1rem;line-height:1.6}
-  .info .icon{color:var(--accent);font-size:1rem;line-height:1.6}
-  .diagram{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0;font-family:'JetBrains Mono',monospace;font-size:.83rem;overflow-x:auto}
-  .perm-visual{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem;margin:1rem 0;font-family:'JetBrains Mono',monospace;font-size:.85rem}
+  code{font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;background:var(--code-bg);border:1px solid var(--border);padding:.1rem .45rem;border-radius:4px;font-size:var(--fs-code);color:var(--code-cmd);white-space:nowrap}
+  td:first-child code{color:var(--code-cmd)}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);color:var(--text);margin:.8rem 0;line-height:1.7}
+  pre .comment{color:var(--code-out)}
+  pre .cmd{color:var(--code-cmd)}
+  pre .flag{color:var(--code-flag)}
+  pre .arg{color:var(--code-arg)}
+  pre .output{color:var(--code-out);font-style:italic}
+  /* ── callouts: ONE neutral style; the label + emoji carries the meaning ── */
+  .tip,.warn,.info,.scope,.edit-note{background:var(--surface);border-left:3px solid var(--muted);border-radius:6px;padding:.75rem 1rem;margin:.8rem 0;font-size:var(--fs-body);display:flex;gap:.6rem;align-items:flex-start}
+  .edit-note{color:var(--muted)}
+  .diagram{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);overflow-x:auto}
+  .perm-visual{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem;margin:1rem 0;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code)}
   .perm-row{display:flex;align-items:center;gap:0;margin-bottom:.5rem;flex-wrap:wrap}
   .perm-cell{padding:.35rem .55rem;border:1px solid var(--border);text-align:center;min-width:2rem}
-  .perm-type{color:var(--yellow);background:#1f2010}
-  .perm-owner{color:var(--red);background:#2d1010}
-  .perm-group{color:var(--green);background:#0d2010}
-  .perm-other{color:var(--accent);background:#0d1830}
-  .perm-label-row{display:flex;gap:0;font-size:.7rem;color:var(--muted);flex-wrap:wrap;margin-top:.1rem}
-  .perm-label-cell{min-width:2rem;padding:.1rem .2rem;text-align:center;font-size:.68rem;color:var(--muted)}
+  .perm-type{color:var(--perm-type);background:#1f2010}
+  .perm-owner{color:var(--perm-owner);background:#2d1010}
+  .perm-group{color:var(--perm-group);background:#0d2010}
+  .perm-other{color:var(--perm-other);background:#0d1830}
+  .perm-label-row{display:flex;gap:0;font-size:var(--fs-micro);color:var(--muted);flex-wrap:wrap;margin-top:.1rem}
+  .perm-label-cell{min-width:2rem;padding:.1rem .2rem;text-align:center;font-size:var(--fs-micro);color:var(--muted)}
   .octal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.8rem 0}
-  .octal-cell{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem;text-align:center;font-family:'JetBrains Mono',monospace}
-  .octal-num{font-size:1.5rem;font-weight:700;color:var(--orange)}
-  .octal-sym{font-size:.85rem;color:var(--cyan);letter-spacing:2px}
-  .octal-desc{font-size:.7rem;color:var(--muted);margin-top:.2rem;font-family:'Outfit',sans-serif}
-  .fhs-tree{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:2}
-  .fhs-root{color:var(--orange);font-weight:700;font-size:1rem}
-  .fhs-dir{color:var(--accent)}
-  .fhs-desc{color:var(--muted);font-family:'Outfit',sans-serif;font-size:.78rem;margin-left:.5rem}
+  .octal-cell{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem;text-align:center;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  .octal-num{font-size:var(--fs-display);font-weight:700;color:var(--code-flag)}
+  .octal-sym{font-size:var(--fs-code);color:var(--code-cmd);letter-spacing:2px}
+  .octal-desc{font-size:var(--fs-micro);color:var(--muted);margin-top:.2rem;font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .fhs-tree{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);line-height:2}
+  .fhs-root{color:var(--code-flag);font-weight:700;font-size:var(--fs-h2)}
+  .fhs-dir{color:var(--code-path)}
+  .fhs-desc{color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-small);margin-left:.5rem}
   .stream-diagram{display:flex;align-items:center;gap:.5rem;margin:1rem 0;flex-wrap:wrap}
-  .stream-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.5rem .9rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.78rem}
-  .stream-box .num{font-size:1.2rem;font-weight:700}
-  .stream-box .name{font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif}
-  .stream-box.stdin .num{color:var(--green)}
-  .stream-box.stdout .num{color:var(--accent)}
-  .stream-box.stderr .num{color:var(--red)}
-  .stream-arrow{color:var(--muted);font-size:1.2rem}
-  .pipeline{display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1.2rem;margin:.8rem 0;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:.82rem;overflow-x:auto}
-  .pipe-cmd{color:var(--cyan);background:#0d1a17;border:1px solid #1e3a2f;border-radius:4px;padding:.2rem .5rem}
-  .pipe-op{color:var(--orange);font-weight:700;padding:0 .2rem}
-  .pipe-file{color:var(--purple);background:#1a1030;border:1px solid #3a2060;border-radius:4px;padding:.2rem .5rem}
-  .key{display:inline-block;background:var(--surface);border:1px solid var(--border);border-bottom:2px solid var(--border);border-radius:4px;padding:.1rem .45rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--yellow)}
-  .op-badge{display:inline-block;background:#1a0e2e;border:1px solid var(--purple);color:var(--purple);font-family:'JetBrains Mono',monospace;border-radius:4px;padding:.1rem .5rem;font-size:.9rem;font-weight:700}
+  .stream-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.5rem .9rem;text-align:center;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small)}
+  .stream-box .num{font-size:var(--fs-display);font-weight:700}
+  .stream-box .name{font-size:var(--fs-micro);color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .stream-box.stdin .num{color:var(--stream-in)}
+  .stream-box.stdout .num{color:var(--stream-out)}
+  .stream-box.stderr .num{color:var(--stream-err)}
+  .stream-arrow{color:var(--muted);font-size:var(--fs-h2)}
+  .pipeline{display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1.2rem;margin:.8rem 0;flex-wrap:wrap;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);overflow-x:auto}
+  .pipe-cmd{color:var(--code-cmd);background:#0d1a17;border:1px solid #1e3a2f;border-radius:4px;padding:.2rem .5rem}
+  .pipe-op{color:var(--code-flag);font-weight:700;padding:0 .2rem}
+  .pipe-file{color:var(--code-arg);background:#1a1030;border:1px solid #3a2060;border-radius:4px;padding:.2rem .5rem}
+  .key{display:inline-block;background:var(--surface);border:1px solid var(--border);border-bottom:2px solid var(--border);border-radius:4px;padding:.1rem .45rem;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small);color:var(--text)}
+  .op-badge{display:inline-block;background:var(--code-bg);border:1px solid var(--border);color:var(--code-cmd);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;border-radius:4px;padding:.1rem .5rem;font-size:var(--fs-body);font-weight:700}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0}
   .glad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.8rem 0}
   .glad-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem;text-align:center}
-  .glad-letter{font-size:2rem;font-weight:800;line-height:1}
-  .glad-word{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:.2rem 0}
-  .glad-desc{font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif}
-  .glad-g{border-top:3px solid var(--green)}.glad-g .glad-letter{color:var(--green)}
-  .glad-l{border-top:3px solid var(--accent)}.glad-l .glad-letter{color:var(--accent)}
-  .glad-a{border-top:3px solid var(--orange)}.glad-a .glad-letter{color:var(--orange)}
-  .glad-d{border-top:3px solid var(--purple)}.glad-d .glad-letter{color:var(--purple)}
-  .prompt-visual{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;font-family:'JetBrains Mono',monospace;font-size:.9rem;margin:.8rem 0}
-  .pr-user{color:var(--green)}.pr-at{color:var(--muted)}.pr-host{color:var(--accent)}.pr-cwd{color:var(--yellow)}.pr-root{color:var(--red)}.pr-user-dollar{color:var(--muted)}
-  .pr-label{font-family:'Outfit',sans-serif;font-size:.72rem;color:var(--muted);margin-top:.5rem;display:flex;gap:1.5rem;flex-wrap:wrap}
-  .module-badge{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.1rem .5rem;border-radius:3px;margin-left:.5rem;vertical-align:middle}
-  .m12{background:#0d1a17;color:var(--green);border:1px solid var(--green)}
-  .m13{background:#1a0e2e;color:var(--purple);border:1px solid var(--purple)}
-  .m14{background:#1a1408;color:var(--orange);border:1px solid var(--orange)}
-  .m21{background:#0d1830;color:var(--accent);border:1px solid var(--accent)}
-  .m22{background:#1a0d0d;color:var(--red);border:1px solid var(--red)}
-  .m23{background:#1a1408;color:var(--yellow);border:1px solid var(--yellow)}
-  .m24{background:#0d1a17;color:#7ee787;border:1px solid #7ee787}
-  .path{color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:.85rem}
+  .glad-letter{font-size:var(--fs-display);font-weight:800;line-height:1}
+  .glad-word{font-size:var(--fs-small);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:.2rem 0}
+  .glad-desc{font-size:var(--fs-micro);color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .glad-g{border-top:3px solid var(--glad-g)}.glad-g .glad-letter{color:var(--glad-g)}
+  .glad-l{border-top:3px solid var(--glad-l)}.glad-l .glad-letter{color:var(--glad-l)}
+  .glad-a{border-top:3px solid var(--glad-a)}.glad-a .glad-letter{color:var(--glad-a)}
+  .glad-d{border-top:3px solid var(--glad-d)}.glad-d .glad-letter{color:var(--glad-d)}
+  .prompt-visual{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);margin:.8rem 0}
+  .pr-user{color:var(--code-cmd)}.pr-at{color:var(--muted)}.pr-host{color:var(--code-path)}.pr-cwd{color:var(--code-flag)}.pr-root{color:var(--danger)}.pr-user-dollar{color:var(--muted)}
+  .pr-label{font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-body);color:var(--muted);margin-top:.6rem;display:flex;gap:1.5rem;flex-wrap:wrap}
+  /* ── module badges: module hue + prominent lesson number, one hue per module ── */
+  .module-badge{display:inline-block;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small);font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:.12rem .55rem;border-radius:4px;margin-left:.5rem;vertical-align:middle}
+  .m12,.m13,.m14{color:var(--band-m1);border:1px solid var(--band-m1);background:rgba(0,255,65,.06)}
+  .m21,.m22,.m23,.m24{color:var(--band-m2);border:1px solid var(--band-m2);background:rgba(59,130,246,.08)}
+  .m31,.m32,.m33,.m34{color:var(--band-m3);border:1px solid var(--band-m3);background:rgba(194,65,12,.09)}
+  .m41,.m42,.m43,.m44{color:var(--band-m4);border:1px solid var(--band-m4);background:rgba(188,140,255,.07)}
+  .mexam{color:var(--band-ex);border:1px solid var(--band-ex);background:rgba(234,179,8,.07)}
+  .path{color:var(--code-path);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code)}
   /* Vim mode boxes */
   .vim-modes{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin:.8rem 0}
   .vim-mode{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem}
-  .vim-mode-name{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.95rem;margin-bottom:.3rem}
-  .vim-mode-key{font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:.3rem}
-  .vim-mode-desc{font-size:.78rem;color:var(--muted);font-family:'Outfit',sans-serif}
-  .vim-mode.normal .vim-mode-name{color:var(--orange)}
-  .vim-mode.insert .vim-mode-name{color:var(--green)}
-  .vim-mode.visual .vim-mode-name{color:var(--purple)}
-  .vim-mode.command .vim-mode-name{color:var(--accent)}
-  /* SSH connection diagram */
-  .ssh-flow{display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin:.8rem 0;flex-wrap:wrap;font-size:.82rem}
-  .ssh-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.5rem .9rem;text-align:center;font-family:'JetBrains Mono',monospace}
-  .ssh-arrow{color:var(--muted);font-size:1.2rem;font-family:'JetBrains Mono',monospace}
+  .vim-mode-name{font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-weight:700;font-size:var(--fs-body);margin-bottom:.3rem}
+  .vim-mode-key{font-size:var(--fs-small);color:var(--muted);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;margin-bottom:.3rem}
+  .vim-mode-desc{font-size:var(--fs-small);color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .vim-mode.normal .vim-mode-name{color:var(--vim-normal)}
+  .vim-mode.insert .vim-mode-name{color:var(--vim-insert)}
+  .vim-mode.visual .vim-mode-name{color:var(--vim-visual)}
+  .vim-mode.command .vim-mode-name{color:var(--vim-command)}
+  /* SSH connection diagram — neutral boxes, the text labels carry the roles */
+  .ssh-flow{display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin:.8rem 0;flex-wrap:wrap;font-size:var(--fs-code)}
+  .ssh-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.5rem .9rem;text-align:center;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  .ssh-arrow{color:var(--muted);font-size:var(--fs-h2);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
   /* Cron visual */
   .cron-cols{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin:.8rem 0}
-  .cron-cell{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:.5rem .3rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.75rem}
-  .cron-cell .cron-label{font-family:'Outfit',sans-serif;font-size:.65rem;color:var(--muted);display:block;margin-bottom:.2rem}
-  .cron-cell .cron-val{color:var(--cyan);font-weight:700}
-  .cron-cell.cmd-col{background:#0d1830;border-color:var(--accent)}
-  .cron-cell.cmd-col .cron-val{color:var(--accent)}
+  .cron-cell{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:.5rem .3rem;text-align:center;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small)}
+  .cron-cell .cron-label{font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif;font-size:var(--fs-micro);color:var(--muted);display:block;margin-bottom:.2rem}
+  .cron-cell .cron-val{color:var(--code-flag);font-weight:700}
+  .cron-cell.cmd-col{background:var(--surface);border-color:var(--muted)}
+  .cron-cell.cmd-col .cron-val{color:var(--code-cmd)}
   /* Kill signals */
   .signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:.8rem 0}
   .signal-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem;text-align:center}
-  .signal-num{font-size:1.8rem;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
-  .signal-name{font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace;margin:.2rem 0}
-  .signal-desc{font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif}
-  .sig-term{border-top:3px solid var(--orange)}.sig-term .signal-num,.sig-term .signal-name{color:var(--orange)}
-  .sig-kill{border-top:3px solid var(--red)}.sig-kill .signal-num,.sig-kill .signal-name{color:var(--red)}
-  .sig-hup{border-top:3px solid var(--accent)}.sig-hup .signal-num,.sig-hup .signal-name{color:var(--accent)}
+  .signal-num{font-size:var(--fs-display);font-weight:800;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;line-height:1}
+  .signal-name{font-size:var(--fs-small);font-weight:700;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;margin:.2rem 0}
+  .signal-desc{font-size:var(--fs-micro);color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .sig-term{border-top:3px solid var(--sig-term)}.sig-term .signal-num,.sig-term .signal-name{color:var(--sig-term)}
+  .sig-kill{border-top:3px solid var(--danger)}.sig-kill .signal-num,.sig-kill .signal-name{color:var(--danger)}
+  .sig-hup{border-top:3px solid var(--sig-hup)}.sig-hup .signal-num,.sig-hup .signal-name{color:var(--sig-hup)}
   /* Boot process */
   .boot-steps{display:flex;flex-direction:column;gap:.3rem;margin:.8rem 0}
-  .boot-step{display:flex;align-items:flex-start;gap:.7rem;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;font-size:.83rem}
-  .boot-step-num{color:var(--orange);font-family:'JetBrains Mono',monospace;font-weight:700;min-width:1.4rem;text-align:center;font-size:1rem}
+  .boot-step{display:flex;align-items:flex-start;gap:.7rem;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;font-size:var(--fs-code)}
+  .boot-step-num{color:var(--code-flag);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-weight:700;min-width:1.4rem;text-align:center;font-size:var(--fs-h2)}
   .boot-step-text{flex:1}
-  .boot-step-name{color:var(--cyan);font-weight:600;font-family:'JetBrains Mono',monospace}
-  .boot-step-desc{color:var(--muted);font-size:.78rem;font-family:'Outfit',sans-serif}
+  .boot-step-name{color:var(--code-cmd);font-weight:600;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  .boot-step-desc{color:var(--muted);font-size:var(--fs-small);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
   /* Process stat */
   .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:.8rem 0}
   .stat-cell{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem .8rem}
-  .stat-letter{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--orange)}
-  .stat-name{font-size:.75rem;font-weight:600;color:var(--text);margin:.1rem 0}
-  .stat-desc{font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif}
+  .stat-letter{font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-display);font-weight:700;color:var(--code-flag)}
+  .stat-name{font-size:var(--fs-small);font-weight:600;color:var(--text);margin:.1rem 0}
+  .stat-desc{font-size:var(--fs-micro);color:var(--muted);font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
   /* TOC */
-  .toc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem;font-size:.85rem}
-  .toc-title{font-weight:700;color:var(--accent);margin-bottom:.6rem;font-size:.9rem}
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem;font-size:var(--fs-h3)}
+  .toc-title{font-weight:700;color:var(--text);margin-bottom:.6rem;font-size:var(--fs-body)}
   .toc-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:.2rem}
   .toc a{color:var(--muted);text-decoration:none}
   .toc a:hover{color:var(--accent)}
-  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted);text-align:center}
+  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:var(--fs-small);color:var(--muted);text-align:center}
   @media(max-width:680px){
+    :root{--fs-title:1.5rem}
     .two-col,.octal-grid,.vim-modes,.toc-cols{grid-template-columns:1fr}
     .glad-grid,.signal-grid,.stat-grid{grid-template-columns:repeat(2,1fr)}
-    header h1{font-size:1.4rem}
     .cron-cols{grid-template-columns:repeat(3,1fr)}
   }
 
@@ -159,131 +180,237 @@
   .layout{display:flex;gap:2rem;align-items:flex-start}
   .sidebar{position:sticky;top:1rem;width:270px;flex-shrink:0;max-height:calc(100vh - 2rem);overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;scrollbar-width:thin}
   .content{flex:1;min-width:0}
-  .side-search{width:100%;padding:.55rem .7rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;margin-bottom:.8rem;font-family:'Outfit',sans-serif}
+  .side-search{width:100%;padding:.55rem .7rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:var(--fs-h3);margin-bottom:.8rem;font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
   .side-search::placeholder{color:var(--muted)}
   .side-search:focus{outline:1px solid var(--accent)}
   .side-group{margin-bottom:.2rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
   .side-group:last-child{border-bottom:none}
-  .side-group summary{cursor:pointer;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;padding:.4rem .2rem;list-style:none;display:flex;align-items:center;gap:.4rem}
+  .side-group summary{cursor:pointer;font-weight:700;font-size:var(--fs-small);text-transform:uppercase;letter-spacing:.5px;padding:.4rem .2rem;list-style:none;display:flex;align-items:center;gap:.4rem}
   .side-group summary::-webkit-details-marker{display:none}
-  .side-group summary:before{content:'▸';transition:transform .15s;color:var(--muted);font-size:.7rem}
+  .side-group summary:before{content:'▸';transition:transform .15s;color:var(--muted);font-size:var(--fs-micro)}
   .side-group[open] summary:before{transform:rotate(90deg)}
   .side-link-list{display:flex;flex-direction:column;gap:.05rem;padding:.2rem 0 .4rem .8rem}
-  .side-link{color:var(--muted);text-decoration:none;font-size:.79rem;padding:.28rem .5rem;border-radius:4px;display:block;line-height:1.35}
+  .side-link{color:var(--muted);text-decoration:none;font-size:var(--fs-small);padding:.28rem .5rem;border-radius:4px;display:block;line-height:1.35}
   .side-link:hover{color:var(--text);background:var(--card)}
-  .side-empty{color:var(--muted);font-size:.78rem;padding:.4rem .5rem;display:none;font-style:italic}
-  .side-hint{font-size:.72rem;color:var(--muted);margin-bottom:.6rem;line-height:1.4}
+  .side-empty{color:var(--muted);font-size:var(--fs-small);padding:.4rem .5rem;display:none;font-style:italic}
+  .side-hint{font-size:var(--fs-micro);color:var(--muted);margin-bottom:.6rem;line-height:1.4}
   @media(max-width:900px){
     .layout{display:block}
     .sidebar{position:static;width:100%;max-height:none;margin-bottom:1.5rem}
   }
 
   /* ══ Header tag rows + intro ══ */
-  .tag-rows{margin-top:.6rem}
+  .tag-rows{margin-top:.45rem}
   .tag-row{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-top:.45rem}
-  .tag-row .tag{margin:0}
-  .tag-mod{font-size:.68rem;font-weight:800;color:var(--muted);letter-spacing:.5px;min-width:1.8rem;text-align:right}
+  .tag-row .tag{margin:0;color:var(--text);font-weight:500}
+  .tag-row a.tag:hover{color:var(--accent)}
+  .tag-mod{font-size:var(--fs-micro);font-weight:800;color:var(--muted);letter-spacing:.5px;min-width:1.8rem;text-align:right}
   .howto{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem 1.1rem;margin:-1.2rem 0 2.2rem}
-  .howto-title{font-weight:700;font-size:.95rem;margin-bottom:.7rem}
+  .howto-title{font-weight:700;font-size:var(--fs-body);margin-bottom:.7rem}
   .howto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.7rem 1.2rem}
-  .howto-item{display:flex;gap:.55rem;font-size:.83rem;line-height:1.45;color:var(--text)}
-  .howto-item strong{display:block;font-size:.84rem}
-  .howto-ico{flex-shrink:0;font-size:1rem;line-height:1.4}
-  .howto kbd{background:var(--card);border:1px solid var(--border);padding:1px 6px;border-radius:3px;font-family:monospace;font-size:.78rem}
+  .howto-item{display:flex;gap:.5rem;font-size:var(--fs-small);line-height:1.45;color:var(--text)}
+  .howto-item strong{font-size:var(--fs-small)}
+  .howto-ico{flex-shrink:0;font-size:var(--fs-h2);line-height:1.4}
+  .howto kbd{background:var(--card);border:1px solid var(--border);padding:1px 6px;border-radius:3px;font-family:monospace;font-size:var(--fs-small)}
   /* ══ Exam Method & Tips ══ */
-  .mexam{background:#241c08;color:#e3b341;border:1px solid #e3b341}
   .fact-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.8rem 0}
-  .fact-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:.7rem .9rem;font-size:.84rem}
-  .fact-card b{color:var(--accent)}
+  .fact-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--muted);border-radius:8px;padding:.7rem .9rem;font-size:var(--fs-h3)}
+  .fact-card b{color:var(--text)}
   .checklist{list-style:none;margin:.6rem 0;padding:0}
-  .checklist li{display:flex;align-items:flex-start;gap:.6rem;padding:.35rem 0;font-size:.87rem;border-bottom:1px dashed var(--border)}
+  .checklist li{display:flex;align-items:flex-start;gap:.6rem;padding:.35rem 0;font-size:var(--fs-body);border-bottom:1px dashed var(--border)}
   .checklist li:last-child{border-bottom:none}
-  .checklist input[type=checkbox]{margin-top:.25rem;accent-color:var(--green);width:1rem;height:1rem;flex-shrink:0}
+  .checklist input[type=checkbox]{margin-top:.25rem;accent-color:var(--accent);width:1rem;height:1rem;flex-shrink:0}
   @media(max-width:680px){.fact-grid{grid-template-columns:1fr}}
-  /* ══ Extended module badges — Modules 3 & 4 ══ */
-  .m31{background:#0d1f1c;color:#2dd4bf;border:1px solid #2dd4bf}
-  .m32{background:#0d1a24;color:#38bdf8;border:1px solid #38bdf8}
-  .m33{background:#24101a;color:#f472b6;border:1px solid #f472b6}
-  .m34{background:#182408;color:#a3e635;border:1px solid #a3e635}
-  .m41{background:#241c08;color:#fbbf24;border:1px solid #fbbf24}
-  .m42{background:#1e1030;color:#c084fc;border:1px solid #c084fc}
-  .m43{background:#240d10;color:#fb7185;border:1px solid #fb7185}
-  .m44{background:#1a1e24;color:#94a3b8;border:1px solid #94a3b8}
   /* ══ Four Freedoms grid (4.1) ══ */
   .freedom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.8rem 0}
-  .freedom-cell{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--purple);border-radius:8px;padding:.8rem;text-align:center}
-  .freedom-num{font-size:1.6rem;font-weight:800;color:var(--purple);font-family:'JetBrains Mono',monospace}
-  .freedom-word{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:.2rem 0}
-  .freedom-desc{font-size:.7rem;color:var(--muted)}
-  /* ══ GUI stack diagram (4.2) ══ */
+  .freedom-cell{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--code-arg);border-radius:8px;padding:.8rem;text-align:center}
+  .freedom-num{font-size:var(--fs-display);font-weight:800;color:var(--code-arg);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  .freedom-word{font-size:var(--fs-micro);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:.2rem 0}
+  .freedom-desc{font-size:var(--fs-micro);color:var(--muted)}
+  /* ══ GUI stack diagram (4.2) — neutral; position in the stack carries the meaning ══ */
   .stack-diagram{display:flex;flex-direction:column;gap:.5rem;margin:.8rem 0}
-  .stack-box{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;padding:.7rem 1.1rem}
-  .stack-box .stack-title{font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:.9rem}
-  .stack-box .stack-desc{color:var(--muted);font-size:.78rem;margin-top:.1rem}
-  .stack-arrow{text-align:center;color:var(--muted);font-size:.9rem}
-  /* ══ 4-reason grid (3.4, reuses freedom look with orange accent) ══ */
+  .stack-box{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--muted);border-radius:6px;padding:.7rem 1.1rem}
+  .stack-box .stack-title{font-weight:700;color:var(--text);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-body)}
+  .stack-box .stack-desc{color:var(--muted);font-size:var(--fs-small);margin-top:.1rem}
+  .stack-arrow{text-align:center;color:var(--muted);font-size:var(--fs-body)}
+  /* ══ 4-reason grid (3.4, same layout as freedoms) ══ */
   .reason-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.8rem 0}
-  .reason-cell{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--orange);border-radius:8px;padding:.8rem;text-align:center}
-  .reason-num{font-size:1.4rem;font-weight:800;color:var(--orange);font-family:'JetBrains Mono',monospace}
-  .reason-word{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin:.25rem 0}
-  .reason-desc{font-size:.68rem;color:var(--muted)}
-  /* ══ scope / editorial note box ══ */
-  .scope{background:#0d1830;border-left:3px solid var(--accent);border-radius:6px;padding:.75rem 1rem;margin:.8rem 0;font-size:.85rem}
-  .edit-note{background:#1a1a1a;border-left:3px solid var(--muted);border-radius:6px;padding:.7rem 1rem;margin:.8rem 0;font-size:.82rem;color:var(--muted);display:flex;gap:.6rem;align-items:flex-start}
-  .edit-note .icon{color:var(--muted)}
+  .reason-cell{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--code-flag);border-radius:8px;padding:.8rem;text-align:center}
+  .reason-num{font-size:var(--fs-display);font-weight:800;color:var(--code-flag);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  .reason-word{font-size:var(--fs-micro);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin:.25rem 0}
+  .reason-desc{font-size:var(--fs-micro);color:var(--muted)}
   @media(max-width:680px){
     .freedom-grid,.reason-grid{grid-template-columns:repeat(2,1fr)}
   }
 
   /* ══ Live username bar ══ */
-  .uname-bar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--border);
-    padding:.6rem 1.2rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;font-size:.85rem;margin:-2rem -1.5rem 2rem;}
-  .uname-bar label{color:var(--muted);font-weight:600;white-space:nowrap}
-  .uname-bar input{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--green);
-    font-family:'JetBrains Mono',monospace;font-size:.9rem;padding:.4rem .7rem;width:150px}
-  .uname-bar input:focus{outline:1px solid var(--accent)}
-  .uname-bar button{background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:6px;
-    padding:.4rem .8rem;font-size:.78rem;cursor:pointer;font-family:'Outfit',sans-serif}
-  .uname-bar button:hover{color:var(--text);border-color:var(--accent)}
-  .uname-bar .uname-hint{color:var(--muted);font-size:.75rem;margin-left:auto}
-  @media(max-width:680px){.uname-bar{margin:-2rem -1rem 1.5rem}.uname-bar .uname-hint{margin-left:0;width:100%}}
+  .uname-inline{display:inline-flex;align-items:center;gap:.45rem;margin-top:.35rem;flex-wrap:wrap;vertical-align:middle}
+  .uname-inline input{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--code-cmd);
+    font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-code);padding:.3rem .6rem;width:120px}
+  .uname-inline input:focus{outline:1px solid var(--accent)}
+  .uname-inline button{background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:6px;
+    padding:.3rem .6rem;font-size:var(--fs-small);cursor:pointer;font-family:'Outfit',system-ui,'Segoe UI',Roboto,sans-serif}
+  .uname-inline button:hover{color:var(--text);border-color:var(--accent)}
+
+  /* ══ module colour identity (bands + tag rows; hues live in --band-* tokens) ══ */
+  /* header pill rows */
+  .tag-row{border-radius:8px;padding:.12rem .5rem;margin-bottom:.22rem;border:1px solid transparent}
+  .tag-row.row-m1{background:rgba(0,255,65,.05);border-color:rgba(0,255,65,.25)}
+  .tag-row.row-m2{background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.3)}
+  .tag-row.row-m3{background:rgba(194,65,12,.08);border-color:rgba(194,65,12,.35)}
+  .tag-row.row-m4{background:rgba(188,140,255,.06);border-color:rgba(188,140,255,.28)}
+  .tag-row.row-ex{background:rgba(234,179,8,.06);border-color:rgba(234,179,8,.3)}
+  .row-m1 .tag-mod{color:var(--band-m1)} .row-m2 .tag-mod{color:var(--band-m2)}
+  .row-m3 .tag-mod{color:var(--band-m3)} .row-m4 .tag-mod{color:var(--band-m4)}
+  .row-ex .tag-mod{color:var(--band-ex)}
+  /* content bands */
+  .modband{border-radius:12px;padding:.2rem 1.2rem 1rem;margin:0 -1.2rem 2.2rem;border:1px solid transparent}
+  .modband .band-label{font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-weight:700;font-size:var(--fs-small);
+    letter-spacing:2px;text-transform:uppercase;padding:.7rem 0 0;opacity:.9}
+  .band-m1{background:rgba(0,255,65,.025);border-color:rgba(0,255,65,.14)}
+  .band-m1 .band-label{color:var(--band-m1)}
+  .band-m2{background:rgba(59,130,246,.035);border-color:rgba(59,130,246,.16)}
+  .band-m2 .band-label{color:var(--band-m2)}
+  .band-m3{background:rgba(194,65,12,.04);border-color:rgba(194,65,12,.18)}
+  .band-m3 .band-label{color:var(--band-m3)}
+  .band-m4{background:rgba(188,140,255,.03);border-color:rgba(188,140,255,.15)}
+  .band-m4 .band-label{color:var(--band-m4)}
+  .band-ex{background:rgba(234,179,8,.03);border-color:rgba(234,179,8,.16)}
+  .band-ex .band-label{color:var(--band-ex)}
+  .modband h2:first-of-type{margin-top:1.2rem}
+  /* ── callout labels: one neutral chip style; the emoji carries the hue ── */
+  .lab{font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small);font-weight:700;letter-spacing:.6px;
+    padding:.18rem .5rem;border-radius:4px;flex-shrink:0;margin-top:.12rem;align-self:flex-start;white-space:nowrap;
+    color:var(--muted);border:1px solid var(--border);background:var(--card)}
+  .lab-tip::before{content:"💡 "}
+  .lab-warn::before{content:"⚠️ "}
+  .lab-note::before{content:"📝 "}
+  .lab-course::before{content:"🎓 "}
+  .lab-exam::before{content:"🎯 "}
+  /* howto v2 — numbered steps */
+  .howto-num{flex-shrink:0;width:1.15rem;height:1.15rem;border-radius:50%;background:var(--card);
+    border:1px solid var(--muted);color:var(--muted);font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;
+    font-weight:700;font-size:var(--fs-micro);display:flex;align-items:center;justify-content:center;margin-top:.05rem}
+  .howto-legend{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;
+    padding-top:.8rem;border-top:1px solid var(--border);font-size:var(--fs-small);color:var(--muted)}
+  /* legend pill — sits in the content column, above the Module 1 band */
+  .legend-bar{display:flex;gap:.6rem .7rem;align-items:center;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:.6rem 1.2rem;margin:0 -1.2rem .9rem;font-size:var(--fs-small);color:var(--muted)}
+  .legend-item{display:inline-flex;align-items:center;gap:.4rem}
+  .uname-section .uname-note .uname-lead{color:var(--text);display:block;margin-bottom:.15rem}
+  /* fine print easter egg hint */
+  .fineprint{font-size:var(--fs-small);color:var(--muted);opacity:.55;margin:.2rem 0 1rem;font-style:italic}
+  .fineprint code{font-size:var(--fs-small);padding:.05rem .3rem;color:var(--muted)}
+  .fineprint:hover{opacity:.9}
+  /* ══ root terminal easter egg — self-contained palette, never printed ══ */
+  #rootTermOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+  #rootTerm{width:min(760px,94vw);height:min(480px,80vh);background:#070203;border:1px solid var(--danger);border-radius:8px;box-shadow:0 0 40px rgba(248,81,73,.35),0 0 120px rgba(248,81,73,.12);display:flex;flex-direction:column;overflow:hidden;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+  #rootTermHead{background:#1a0d0d;border-bottom:1px solid var(--danger);padding:.45rem .9rem;display:flex;align-items:center;gap:.6rem;font-size:var(--fs-small);color:var(--danger);flex-shrink:0}
+  #rootTermHead .dots{display:flex;gap:.35rem}
+  #rootTermHead .dot{width:.65rem;height:.65rem;border-radius:50%;background:#2d1e1e;border:1px solid var(--danger)}
+  #rootTermHead .ttl{flex:1;text-align:center;letter-spacing:1px}
+  #rootTermClose{background:none;border:none;color:var(--danger);font-size:var(--fs-h2);cursor:pointer;line-height:1;padding:0 .2rem}
+  #rootTermClose:hover{color:#fff}
+  #rootTermOut{flex:1;overflow-y:auto;padding:.8rem 1rem;font-size:var(--fs-small);line-height:1.55;color:#e6d5d5;white-space:pre-wrap;word-break:break-word}
+  #rootTermOut .rt-red{color:#f85149}
+  #rootTermOut .rt-dim{color:#7a5c5c}
+  #rootTermOut .rt-green{color:#3fb950}
+  #rootTermOut .rt-yellow{color:#e3b341}
+  #rootTermOut .rt-dir{color:#79c0ff;font-weight:700}
+  #rootTermLine{display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem .8rem;flex-shrink:0}
+  #rootTermLine .rt-prompt{color:var(--danger);font-size:var(--fs-small);white-space:nowrap}
+  #rootTermInput{flex:1;background:none;border:none;outline:none;color:#e6d5d5;font-family:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;font-size:var(--fs-small);caret-color:var(--danger)}
+  #rootTerm.melting{animation:rt-shake .08s linear infinite}
+  @keyframes rt-shake{0%{transform:translate(0,0)}25%{transform:translate(1.5px,-1px)}50%{transform:translate(-1px,1.5px)}75%{transform:translate(1px,1px)}}
+  /* username section */
+  .uname-section{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--border);
+    border-radius:10px;padding:.9rem 1.2rem;margin:-1.2rem 0 2.2rem;display:flex;align-items:center;
+    gap:.35rem 1rem;flex-wrap:wrap;font-size:var(--fs-h3)}
+  .uname-section .uname-title{font-weight:700;font-size:var(--fs-body);white-space:nowrap}
+  .uname-section .uname-note{color:var(--muted);font-size:var(--fs-small);flex-basis:100%;line-height:1.4;margin-top:-.1rem}
+
+  /* ══ v2.8 additions ══ */
+  /* howto collapsible (from 2_7) */
+  .howto-zone{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;margin:.4rem 0 .2rem}
+  .howto-zone summary{cursor:pointer;font-size:var(--fs-small);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;user-select:none}
+  .howto-zone summary:hover{color:var(--text)}
+  .howto-zone:not([open]) summary{margin-bottom:0}
+  /* click-to-copy */
+  td code{cursor:copy}
+  td code.copied{outline:1px solid var(--accent);border-radius:3px}
+  td code.copied::after{content:" ✓ copied";color:var(--accent);font-size:var(--fs-micro)}
+  /* search count + row filter */
+  .search-count{font-size:var(--fs-micro);color:var(--muted);margin:.25rem 0 0 .1rem;min-height:.9rem}
+  tr.filter-hide{display:none}
+  .tbl-wrap.filter-empty{display:none}
+  /* scrollspy */
+  .side-link.active{color:var(--accent);font-weight:600}
+  /* accessibility */
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .skip-link{position:absolute;left:-9999px;top:0;background:var(--card);color:var(--text);padding:.5rem 1rem;z-index:2000;border-radius:0 0 6px 0;border:1px solid var(--border)}
+  .skip-link:focus{left:0}
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+  /* print — light, toner-safe; remaps the SAME tokens (keep in sync when tokens change) */
+  @media print{
+    :root{
+      --bg:#fff;--surface:#fff;--card:#fff;--border:#bbb;--text:#111;--muted:#555;--code-bg:#f4f4f4;
+      --accent:#0550ae;
+      --band-m1:#116329;--band-m2:#0550ae;--band-m3:#9a3412;--band-m4:#6639ba;--band-ex:#7d4e00;
+      --code-cmd:#116329;--code-flag:#7d4e00;--code-arg:#6639ba;--code-out:#555;--code-path:#0550ae;
+      --danger:#a40e26;
+      --perm-type:#7d4e00;--perm-owner:#a40e26;--perm-group:#116329;--perm-other:#0550ae;
+      --stream-in:#116329;--stream-out:#0550ae;--stream-err:#a40e26;
+      --sig-term:#7d4e00;--sig-hup:#0550ae;
+      --vim-normal:#7d4e00;--vim-insert:#116329;--vim-visual:#6639ba;--vim-command:#0550ae;
+      --glad-g:#116329;--glad-l:#0550ae;--glad-a:#7d4e00;--glad-d:#6639ba;
+    }
+    body{background:#fff !important;color:#111}
+    .sidebar,.skip-link,.uname-section,.fineprint,#rootTermOverlay,.search-count{display:none !important}
+    .layout{display:block}
+    .modband,.tag-row,.legend-bar{background:#fff !important;border-color:#bbb}
+    .module-badge,.perm-type,.perm-owner,.perm-group,.perm-other,.pipe-cmd,.pipe-file,.cron-cell.cmd-col,.op-badge{background:#fff !important}
+    .tbl-wrap,pre,.tip,.warn,.info,.scope,.edit-note,.boot-step{break-inside:avoid}
+    a{color:inherit;text-decoration:none}
+    h1,h2,h3{color:#111}
+  }
 </style>
 </head>
 <body>
-
-<div class="uname-bar">
-  <label for="unameInput">🧑 Your Linux username:</label>
-  <input type="text" id="unameInput" value="knox" placeholder="knox" autocomplete="off" spellcheck="false">
-  <button id="unameReset" type="button">Reset</button>
-</div>
-
+<a class="skip-link" href="#prompt">Skip to content</a>
 
 <header>
   <h1>⚙ Linux Fedora — Command Cheat Sheet</h1>
-  <p>Course: FI1AMLI75 — Linux &nbsp;|&nbsp; Environment: Fedora (Workstation)</p>
   <div class="tag-rows">
-    <div class="tag-row"><span class="tag-mod">M1</span><a class="tag" href="#prompt">1.2 Technical basics</a><a class="tag" href="#identity">1.3 Users, Groups &amp; Permissions</a><a class="tag" href="#streams">1.4 Shell, Pipelines &amp; Packages</a></div>
-    <div class="tag-row"><span class="tag-mod">M2</span><a class="tag" href="#symlinks">2.1 Symlinks, SSH &amp; GnuPG</a><a class="tag" href="#systemd">2.2 Systemd &amp; Scheduling</a><a class="tag" href="#processes">2.3 Processes, Filesystems &amp; Hardware</a><a class="tag" href="#vim">2.4 Vim</a></div>
-    <div class="tag-row"><span class="tag-mod">M3</span><a class="tag" href="#backup">3.1 Archiving, Compression &amp; Backup</a><a class="tag" href="#netbasics">3.2 Networking Basics</a><a class="tag" href="#containers">3.3 Containers &amp; Docker</a><a class="tag" href="#compile">3.4 Compiling From Source</a></div>
-    <div class="tag-row"><span class="tag-mod">M4</span><a class="tag" href="#lawethics">4.1 Law, Ethics &amp; Software</a><a class="tag" href="#gui">4.2 Graphical Environment</a><a class="tag" href="#mixedenv">4.3 Mixed Environment</a><a class="tag" href="#gentoo">4.4 Install Gentoo</a></div>
-    <div class="tag-row"><span class="tag-mod">🎯</span><a class="tag" href="#exam">Exam Method &amp; Tips</a><a class="tag" href="#reverseindex">Problem → Tool Index</a><a class="tag" href="#troubleshoot">GLAD Method</a></div>
+    <div class="tag-row row-m1"><span class="tag-mod">M1</span><a class="tag" href="#prompt">1.2 Technical basics</a><a class="tag" href="#identity">1.3 Users, Groups &amp; Permissions</a><a class="tag" href="#streams">1.4 Shell, Pipelines &amp; Packages</a></div>
+    <div class="tag-row row-m2"><span class="tag-mod">M2</span><a class="tag" href="#symlinks">2.1 Symlinks, SSH &amp; GnuPG</a><a class="tag" href="#systemd">2.2 Systemd &amp; Scheduling</a><a class="tag" href="#processes">2.3 Processes, Filesystems &amp; Hardware</a><a class="tag" href="#vim">2.4 Vim</a></div>
+    <div class="tag-row row-m3"><span class="tag-mod">M3</span><a class="tag" href="#backup">3.1 Archiving, Compression &amp; Backup</a><a class="tag" href="#netbasics">3.2 Networking Basics</a><a class="tag" href="#containers">3.3 Containers &amp; Docker</a><a class="tag" href="#compile">3.4 Compiling From Source</a></div>
+    <div class="tag-row row-m4"><span class="tag-mod">M4</span><a class="tag" href="#lawethics">4.1 Law, Ethics &amp; Software</a><a class="tag" href="#gui">4.2 Graphical Environment</a><a class="tag" href="#mixedenv">4.3 Mixed Environment</a><a class="tag" href="#gentoo">4.4 Install Gentoo</a></div>
+    <div class="tag-row row-ex"><span class="tag-mod">EX</span><a class="tag" href="#exam">Exam Method &amp; Tips</a><a class="tag" href="#reverseindex">Problem → Tool Index</a><a class="tag" href="#troubleshoot">GLAD Method</a></div>
   </div>
 </header>
 
 <section class="howto">
-  <div class="howto-title">👋 How to use this sheet</div>
+  <details class="howto-zone" open>
+  <summary>How to use this sheet</summary>
   <div class="howto-grid">
-    <div class="howto-item"><span class="howto-ico">🔎</span><span><strong>Filter, don't scroll.</strong> Type a command (<code>chmod</code>) or a problem ("permission denied", "start on boot") in the sidebar box — the topic list narrows live.</span></div>
-    <div class="howto-item"><span class="howto-ico">🏷️</span><span><strong>Jump by module.</strong> The pills above go straight to each submodule's first section; the coloured badge on every heading shows which lesson it came from.</span></div>
-    <div class="howto-item"><span class="howto-ico">🧑</span><span><strong>Make it yours.</strong> Change the username in the top bar and every example command updates to match your own machine.</span></div>
-    <div class="howto-item"><span class="howto-ico">🎯</span><span><strong>Exam day.</strong> Head to the Exam section for the problem→tool index, verification commands, and the pre-exam checklist — the boxes are tickable.</span></div>
-    <div class="howto-item"><span class="howto-ico">⌨️</span><span><strong>Exact match?</strong> <kbd>Ctrl+F</kbd> still works for finding any specific flag or string on the page.</span></div>
+    <div class="howto-item"><span class="howto-num">1</span><span>Type what you need in the sidebar box — a command like <code>chmod</code>, or a problem like "permission denied". The page narrows down while you type. <span class="key">/</span> puts your cursor there.</span></div>
+    <div class="howto-item"><span class="howto-num">2</span><span>The colored rows at the top take you to each module. The same colors mark the sections down the page.</span></div>
+    <div class="howto-item"><span class="howto-num">3</span><span>On exam day: the Exam section has the problem→tool table, verification commands, and a checklist you can tick.</span></div>
   </div>
+  </details>
+</section>
+
+<section class="uname-section" id="username">
+  <span class="uname-title">Terminal username</span>
+  <span class="uname-inline"><input type="text" id="unameInput" value="knox" placeholder="knox" autocomplete="off" spellcheck="false"><button id="unameReset" type="button">Reset</button></span>
+  <span class="uname-note"><span class="uname-lead">Enter your linux/terminal username in the field above.</span>
+  Every command on this page updates to mirror this user(name). Other names you'll spot in the examples below (janrik, wizard) and oddly specific paths come straight from the course material — they're kept as-is so examples match what you'll see in the module texts.</span>
 </section>
 
 <div class="layout">
 <nav class="sidebar" id="sidebar">
-  <input type="text" class="side-search" id="sideSearch" placeholder="&#128269; Filter (e.g. chmod, docker, wayland)&hellip;">
+  <input type="text" class="side-search" id="sideSearch" placeholder="Filter — press / (chmod, docker, wayland)&hellip;"><div id="searchCount" class="search-count"></div>
   <div class="side-hint">Click any topic to jump. Filter narrows the list live.</div>
   <details class="side-group" open>
     <summary>Module 1 — Foundations</summary>
@@ -309,7 +436,7 @@
       <div class="side-empty">No matches</div>
     </div>
   </details>
-  <details class="side-group" open>
+  <details class="side-group">
     <summary>Module 2 — Security &amp; Systems</summary>
     <div class="side-link-list">
       <a class="side-link" href="#symlinks" data-kw="symbolic links ln -s soft link">Symbolic Links</a>
@@ -326,7 +453,7 @@
       <div class="side-empty">No matches</div>
     </div>
   </details>
-  <details class="side-group" open>
+  <details class="side-group">
     <summary>Module 3 — Files, Nets &amp; Containers</summary>
     <div class="side-link-list">
       <a class="side-link" href="#backup" data-kw="archiving, compression &amp; backup tar gzip bzip2 xz rsync bit rot mirror sync restore recurring">Archiving, Compression &amp; Backup</a>
@@ -336,7 +463,7 @@
       <div class="side-empty">No matches</div>
     </div>
   </details>
-  <details class="side-group" open>
+  <details class="side-group">
     <summary>Module 4 — Law, GUI &amp; Enterprise</summary>
     <div class="side-link-list">
       <a class="side-link" href="#lawethics" data-kw="law, ethics &amp; software gpl copyleft mit bsd fsf gnu licence">Law, Ethics &amp; Software</a>
@@ -346,7 +473,7 @@
       <div class="side-empty">No matches</div>
     </div>
   </details>
-  <details class="side-group" open>
+  <details class="side-group">
     <summary>Exam Method &amp; Tips</summary>
     <div class="side-link-list">
       <a class="side-link" href="#exam" data-kw="exam method facts open book fedora cli assessed gentoo benchmark readiness">Exam Facts &amp; Method</a>
@@ -360,20 +487,34 @@
 </nav>
 <main class="content">
 
+<div class="legend-bar">
+  <span class="legend-item"><span class="lab lab-tip">TIP</span><span>shortcut or best practice</span></span>
+  <span class="legend-item"><span class="lab lab-warn">WARNING</span><span>common pitfall</span></span>
+  <span class="legend-item"><span class="lab lab-note">NOTE</span><span>context worth knowing</span></span>
+  <span class="legend-item"><span class="lab lab-course">COURSE</span><span>quirk or gap in the course material itself</span></span>
+</div>
 
+<section class="modband band-m1">
+<div class="band-label">Module 1 — Foundations</div>
 <!-- ═══ PROMPT ═══ -->
 <h2 id="prompt">💬 The Shell Prompt <span class="module-badge m12">1.2</span></h2>
+<h3>This is what the shell prompt looks like</h3>
 <div class="prompt-visual">
-  <span class="pr-user-dollar">[</span><span class="pr-user"><span class="uname">knox</span></span><span class="pr-at">@</span><span class="pr-host">fedora</span> <span class="pr-cwd">~</span><span class="pr-user-dollar">]$</span> <span style="color:var(--text)">ls</span><br><br>
-  <span style="color:var(--muted);font-size:.75rem">Root user prompt:</span><br>
-  <span class="pr-root">[root@fedora ~]#</span>
+  <span class="pr-user-dollar">[</span><span class="pr-user"><span class="uname">knox</span></span><span class="pr-at">@</span><span class="pr-host">fedora</span> <span class="pr-cwd">~</span><span class="pr-user-dollar">]$</span> <span style="color:var(--text)">ls</span>
 </div>
 <div class="pr-label">
-  <span style="color:var(--green)"><span class="uname">knox</span> = username</span>
-  <span style="color:var(--accent)">fedora = hostname</span>
-  <span style="color:var(--yellow)">~ = $HOME directory</span>
+  <span style="color:var(--code-cmd)"><span class="uname">knox</span> = username</span>
+  <span style="color:var(--code-path)">fedora = hostname</span>
+  <span style="color:var(--code-flag)">~ = $HOME directory</span>
   <span style="color:var(--muted)">$ = normal user &nbsp; # = root</span>
 </div>
+
+<h3>This is what it looks like when you are root</h3>
+<div class="prompt-visual" style="border-left:3px solid var(--danger)">
+  <span class="pr-user-dollar">[</span><span class="pr-root">root</span><span class="pr-at">@</span><span class="pr-host">fedora</span> <span class="pr-cwd">~</span><span class="pr-user-dollar">]#</span> <span style="color:var(--text)">&#9608;</span>
+</div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Never be in root.</strong> The prompt turns <span style="color:var(--danger)">red</span> in most configs and <code>$</code> becomes <code>#</code> — that's the terminal telling you the safety is off. Every command runs with infinite privileges, nothing asks "are you sure", and one typo can end a filesystem. Use <code>sudo</code> for the single command that needs it, then go back to being mortal.</span></div>
+<p class="fineprint">* Like, for example, you should never ever-<em>ever</em> type <code>root</code> into the terminal username field at the top of this website.</p>
 
 
 <!-- ═══ NAVIGATION ═══ -->
@@ -402,6 +543,7 @@
     <tr><td><code>less &lt;file&gt;</code></td><td>Page through a file (scroll, search with /)</td></tr>
     <tr><td><code>grep &lt;pattern&gt; &lt;file&gt;</code></td><td>Show lines matching a pattern</td></tr>
     <tr><td><code>cp &lt;src&gt; &lt;dest&gt;</code></td><td>Copy a file</td></tr>
+    <tr><td><code>cp -r &lt;src&gt; &lt;dest&gt;</code></td><td>Copy a directory (recursive — includes everything inside)</td></tr>
     <tr><td><code>mv &lt;src&gt; &lt;dest&gt;</code></td><td>Move or rename file/directory</td></tr>
     <tr><td><code>rm &lt;file&gt;</code></td><td>Delete a file</td></tr>
     <tr><td><code>rm -r &lt;dir&gt;</code></td><td>Delete directory and all contents recursively</td></tr>
@@ -413,11 +555,14 @@
   </tbody>
 </table></div>
 <div class="diagram">
-  <span style="color:var(--orange)">/home/<span class="uname">knox</span>/Noroff/lnx.course</span>  <span style="color:var(--muted)">← absolute (starts with /)</span><br>
-  <span style="color:var(--cyan)">Noroff/lnx.course</span>                 <span style="color:var(--muted)">← relative (from current dir)</span><br>
-  <span style="color:var(--yellow)">.</span>  <span style="color:var(--muted)">current dir &nbsp; &nbsp;</span><span style="color:var(--yellow)">..</span>  <span style="color:var(--muted)">parent dir &nbsp; &nbsp;</span><span style="color:var(--yellow)">~</span>  <span style="color:var(--muted)">home dir ($HOME)</span>
+  <span style="color:var(--code-path)">/home/<span class="uname">knox</span>/Noroff/lnx.course</span>  <span style="color:var(--muted)">← absolute (starts with /)</span><br>
+  <span style="color:var(--code-cmd)">Noroff/lnx.course</span>                 <span style="color:var(--muted)">← relative (from current dir)</span><br>
+  <span style="color:var(--code-flag)">.</span>  <span style="color:var(--muted)">current dir &nbsp; &nbsp;</span><span style="color:var(--code-flag)">..</span>  <span style="color:var(--muted)">parent dir &nbsp; &nbsp;</span><span style="color:var(--code-flag)">~</span>  <span style="color:var(--muted)">home dir ($HOME)</span>
 </div>
-<div class="tip"><span class="icon">💡</span><span>Filesystem is <strong>case-sensitive</strong>. <code>Noroff</code> and <code>noroff</code> are different files. Windows is not; Linux is.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Filesystem is <strong>case-sensitive</strong>. <code>Noroff</code> and <code>noroff</code> are different files. Windows is not; Linux is.</span></div>
+
+
+<div class="tip"><span class="lab lab-tip">TIP</span><span><strong>Absolute vs relative paths:</strong> a path starting with <code>/</code> is absolute — counted from the filesystem root, works from anywhere. Anything else is relative to where you are standing (<code>pwd</code>). <code>./file</code> = right here, <code>../file</code> = one level up.</span></div>
 
 
 <!-- ═══ FHS ═══ -->
@@ -455,10 +600,10 @@
 <div class="tbl-wrap"><table>
   <thead><tr><th>Key in man</th><th>Action</th></tr></thead>
   <tbody>
-    <tr><td><span class="key">D</span> / <span class="key">U</span></td><td>Scroll down / up</td></tr>
+    <tr><td><span class="key">d</span> / <span class="key">u</span></td><td>Scroll half a page down / up (lowercase — keys are case-sensitive)</td></tr>
     <tr><td><span class="key">/</span> then type</td><td>Search for keyword</td></tr>
-    <tr><td><span class="key">N</span> / <span class="key">Shift+N</span></td><td>Jump to next / previous match</td></tr>
-    <tr><td><span class="key">Q</span></td><td>Quit the manual</td></tr>
+    <tr><td><span class="key">n</span> / <span class="key">N</span></td><td>Jump to next / previous match (capital N searches backwards)</td></tr>
+    <tr><td><span class="key">q</span></td><td>Quit the manual</td></tr>
   </tbody>
 </table></div>
 
@@ -549,8 +694,8 @@
 </table></div>
 <h3>/etc/passwd field breakdown</h3>
 <div class="diagram">
-  <span style="color:var(--muted)">name</span><span style="color:var(--orange)">:</span><span style="color:var(--muted)">password</span><span style="color:var(--orange)">:</span><span style="color:var(--accent)">UID</span><span style="color:var(--orange)">:</span><span style="color:var(--green)">GID</span><span style="color:var(--orange)">:</span><span style="color:var(--muted)">comment</span><span style="color:var(--orange)">:</span><span style="color:var(--yellow)">home</span><span style="color:var(--orange)">:</span><span style="color:var(--purple)">shell</span><br>
-  <span style="color:var(--muted);font-size:.78rem">x = password in /etc/shadow &nbsp;|&nbsp; UID ≥ 1000 = regular user &nbsp;|&nbsp; nologin = service account</span>
+  <span style="color:var(--muted)">name</span><span style="color:var(--muted)">:</span><span style="color:var(--muted)">password</span><span style="color:var(--muted)">:</span><span style="color:var(--code-path)">UID</span><span style="color:var(--muted)">:</span><span style="color:var(--code-cmd)">GID</span><span style="color:var(--muted)">:</span><span style="color:var(--muted)">comment</span><span style="color:var(--muted)">:</span><span style="color:var(--code-flag)">home</span><span style="color:var(--muted)">:</span><span style="color:var(--code-arg)">shell</span><br>
+  <span style="color:var(--muted);font-size:var(--fs-small)">x = password in /etc/shadow &nbsp;|&nbsp; UID ≥ 1000 = regular user &nbsp;|&nbsp; nologin = service account</span>
 </div>
 
 
@@ -566,7 +711,8 @@
     <tr><td><code>exit</code></td><td>Return to previous user / close shell</td></tr>
   </tbody>
 </table></div>
-<div class="warn"><span class="icon">⚠</span><span>Never log in as root directly. Root actions are not logged, all programs run with infinite privileges, and file permission protections are bypassed. Use <code>sudo</code> instead. <strong>Principle of least privilege:</strong> only add users to <code>wheel</code> if they genuinely need admin access.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Never log in as root directly. Root actions are not logged, all programs run with infinite privileges, and file permission protections are bypassed. Use <code>sudo</code> instead. <strong>Principle of least privilege:</strong> only add users to <code>wheel</code> if they genuinely need admin access.</span></div>
+<p class="fineprint">* Still resisting the urge? Good. The username field at the top of this page appreciates your discipline.</p>
 
 
 <!-- ═══ USER MANAGEMENT ═══ -->
@@ -584,8 +730,8 @@
     <tr><td><code>sudo usermod -g &lt;group&gt; &lt;user&gt;</code></td><td>Change a user's primary group</td></tr>
   </tbody>
 </table></div>
-<div class="warn"><span class="icon">⚠</span><span><code>usermod -G &lt;group&gt; &lt;user&gt;</code> WITHOUT <code>-a</code> REPLACES all supplementary groups. Always use <code>-aG</code>.</span></div>
-<div class="info"><span class="icon">ℹ</span><span><strong>User Private Group (UPG):</strong> if you don't specify <code>-g</code>, <code>useradd</code> creates a brand-new group named identically to the user and makes it their primary group — Fedora/RHEL default behaviour.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><code>usermod -G &lt;group&gt; &lt;user&gt;</code> WITHOUT <code>-a</code> REPLACES all supplementary groups. Always use <code>-aG</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span><strong>User Private Group (UPG):</strong> if you don't specify <code>-g</code>, <code>useradd</code> creates a brand-new group named identically to the user and makes it their primary group — Fedora/RHEL default behaviour.</span></div>
 
 
 <!-- ═══ GROUP MANAGEMENT ═══ -->
@@ -598,7 +744,7 @@
     <tr><td><code>sudo usermod -aG wheel &lt;user&gt;</code></td><td>Grant sudo access on Fedora (wheel = sudo group for Red Hat)</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>On Fedora/RHEL, <code>sudo</code> is controlled by the <strong>wheel</strong> group — not a "sudo" group like Debian/Ubuntu.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>On Fedora/RHEL, <code>sudo</code> is controlled by the <strong>wheel</strong> group — not a "sudo" group like Debian/Ubuntu.</span></div>
 
 
 <!-- ═══ FILE PERMISSIONS ═══ -->
@@ -609,16 +755,16 @@
     <div class="perm-cell perm-owner">r</div><div class="perm-cell perm-owner">w</div><div class="perm-cell perm-owner">x</div>
     <div class="perm-cell perm-group">r</div><div class="perm-cell perm-group">-</div><div class="perm-cell perm-group">x</div>
     <div class="perm-cell perm-other">r</div><div class="perm-cell perm-other">-</div><div class="perm-cell perm-other">-</div>
-    &nbsp;&nbsp;<span style="color:var(--muted);font-size:.78rem;font-family:Outfit,sans-serif">1 &nbsp; owner &nbsp; group &nbsp; 4096 &nbsp; filename</span>
+    &nbsp;&nbsp;<span style="color:var(--muted);font-size:var(--fs-small);font-family:Outfit,sans-serif">1 &nbsp; owner &nbsp; group &nbsp; 4096 &nbsp; filename</span>
   </div>
   <div class="perm-label-row">
-    <div class="perm-label-cell" style="color:var(--yellow)">type</div>
-    <div class="perm-label-cell" style="color:var(--red);min-width:6rem">── owner ──</div>
-    <div class="perm-label-cell" style="color:var(--green);min-width:6rem">── group ──</div>
-    <div class="perm-label-cell" style="color:var(--accent);min-width:6rem">── other ──</div>
+    <div class="perm-label-cell" style="color:var(--perm-type)">type</div>
+    <div class="perm-label-cell" style="color:var(--perm-owner);min-width:6rem">── owner ──</div>
+    <div class="perm-label-cell" style="color:var(--perm-group);min-width:6rem">── group ──</div>
+    <div class="perm-label-cell" style="color:var(--perm-other);min-width:6rem">── other ──</div>
   </div>
-  <div style="margin-top:.7rem;font-size:.75rem;color:var(--muted);font-family:Outfit,sans-serif">
-    <span style="color:var(--yellow)">-</span> regular file &nbsp;|&nbsp; <span style="color:var(--yellow)">d</span> directory &nbsp;|&nbsp; <span style="color:var(--yellow)">l</span> symbolic link
+  <div style="margin-top:.7rem;font-size:var(--fs-small);color:var(--muted);font-family:Outfit,sans-serif">
+    <span style="color:var(--perm-type)">-</span> regular file &nbsp;|&nbsp; <span style="color:var(--perm-type)">d</span> directory &nbsp;|&nbsp; <span style="color:var(--perm-type)">l</span> symbolic link
   </div>
 </div>
 
@@ -668,11 +814,11 @@
 <span class="cmd">sudo chmod</span> <span class="arg">701 /home/<span class="uname">knox</span></span>  <span class="comment"># x bit = can traverse, NOT list</span></pre>
 
 <div class="diagram" style="line-height:2">
-  1. Permissions checked <span style="color:var(--orange)">per file individually</span><br>
-  2. You are <span style="color:var(--cyan)">owner</span> → use owner permissions and STOP<br>
-  3. You are in <span style="color:var(--green)">group</span> (not owner) → use group permissions<br>
-  4. Neither → use <span style="color:var(--accent)">other</span> permissions<br>
-  5. <span style="color:var(--red)">root</span> bypasses ALL permission checks
+  1. Permissions checked <span style="color:var(--code-flag)">per file individually</span><br>
+  2. You are <span style="color:var(--perm-owner)">owner</span> → use owner permissions and STOP<br>
+  3. You are in <span style="color:var(--perm-group)">group</span> (not owner) → use group permissions<br>
+  4. Neither → use <span style="color:var(--perm-other)">other</span> permissions<br>
+  5. <span style="color:var(--danger)">root</span> bypasses ALL permission checks
 </div>
 
 
@@ -704,7 +850,7 @@
 <h2 id="pipes">🔗 Pipelines &amp; Bash Operators <span class="module-badge m14">1.4</span></h2>
 <div class="pipeline">
   <span class="pipe-cmd">command1</span><span class="pipe-op">|</span><span class="pipe-cmd">command2</span><span class="pipe-op">|</span><span class="pipe-cmd">command3</span>
-  <span style="color:var(--muted);font-size:.8rem;margin-left:.5rem">stdout of left → stdin of right</span>
+  <span style="color:var(--muted);font-size:var(--fs-small);margin-left:.5rem">stdout of left → stdin of right</span>
 </div>
 <pre><span class="cmd">ls</span> <span class="arg">/etc</span> <span class="flag">|</span> <span class="cmd">head</span>              <span class="comment"># first 10 entries of /etc</span>
 <span class="cmd">ls</span> <span class="arg">/etc</span> <span class="flag">|</span> <span class="cmd">wc</span> <span class="flag">-l</span>             <span class="comment"># count files in /etc</span>
@@ -735,7 +881,7 @@
     <tr><td><code>[!abc]</code></td><td>One character NOT in set</td><td><code>ls [!a]*.txt</code></td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>Globs are a <strong>shell</strong> feature — they work with any command, not just <code>ls</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Globs are a <strong>shell</strong> feature — they work with any command, not just <code>ls</code>.</span></div>
 
 
 <!-- ═══ ENV VARS ═══ -->
@@ -754,7 +900,7 @@
 <pre><span class="comment"># ~/.bashrc — add directory to PATH, set an env var</span>
 PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</span>
 <span class="cmd">export</span> <span class="arg">SUDO_EDITOR=/usr/bin/micro</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Put your own scripts in <span class="path">~/.local/bin</span> — already in $PATH on Fedora. Run them by name from anywhere.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Put your own scripts in <span class="path">~/.local/bin</span> — already in $PATH on Fedora. Run them by name from anywhere.</span></div>
 
 
 <!-- ═══ SCRIPTING ═══ -->
@@ -777,6 +923,18 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
 </table></div>
 
 
+<h3>Bash arrays</h3>
+<div class="tbl-wrap"><table>
+  <thead><tr><th>Syntax</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>arr=(one two three)</code></td><td>Create an array (spaces separate elements)</td></tr>
+    <tr><td><code>${arr[0]}</code></td><td>First element — zero-indexed</td></tr>
+    <tr><td><code>${arr[@]}</code></td><td>All elements</td></tr>
+    <tr><td><code>${#arr[@]}</code></td><td>Number of elements</td></tr>
+  </tbody>
+</table></div>
+
+
 <!-- ═══ DNF ═══ -->
 <h2 id="dnf">📥 Package Management — DNF <span class="module-badge m14">1.4</span></h2>
 <div class="tbl-wrap"><table>
@@ -792,35 +950,40 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
     <tr><td><code>dnf history</code></td><td>View install/remove history</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>Fedora uses <code>.rpm</code> packages. Debian/Ubuntu use <code>.deb</code>. Arch uses <code>.pkg.tar.zst</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Fedora uses <code>.rpm</code> packages. Debian/Ubuntu use <code>.deb</code>. Arch uses <code>.pkg.tar.zst</code>.</span></div>
 
 
 <!-- ══════════════════════ MODULE 2 ══════════════════════ -->
 
+</section>
+
+<section class="modband band-m2">
+<div class="band-label">Module 2 — Security &amp; Systems</div>
 <!-- ═══ SYMLINKS ═══ -->
 <h2 id="symlinks">🔗 Symbolic Links (Symlinks) <span class="module-badge m21">2.1</span></h2>
 <div class="tbl-wrap"><table>
   <thead><tr><th>Command</th><th>What it does</th></tr></thead>
   <tbody>
     <tr><td><code>ln -s &lt;target&gt; &lt;linkname&gt;</code></td><td>Create a symbolic link (-s = soft/symlink)</td></tr>
+    <tr><td><code>ln &lt;target&gt; &lt;linkname&gt;</code></td><td>Create a <strong>hard link</strong> (no -s) — a second name for the same file data; still works if the original is deleted. No directories, no crossing filesystems</td></tr>
     <tr><td><code>ls -l</code></td><td>Shows symlinks with <code>l</code> type and <code>→</code> arrow to target</td></tr>
     <tr><td><code>rm &lt;linkname&gt;</code></td><td>Delete the symlink (does NOT delete the target file)</td></tr>
   </tbody>
 </table></div>
 <pre><span class="cmd">ln</span> <span class="flag">-s</span> <span class="arg">/home/<span class="uname">knox</span>/projects/app</span> <span class="arg">~/app</span>  <span class="comment"># target first, link name second</span>
 <span class="output">lrwxrwxrwx 1 <span class="uname">knox</span> <span class="uname">knox</span> 28 Jun 5 app -> /home/<span class="uname">knox</span>/projects/app</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>Symlinks are like Windows shortcuts but more powerful. On Fedora, <code>/bin</code>, <code>/sbin</code>, <code>/lib</code> are all symlinks to <code>/usr/</code> equivalents.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Symlinks are like Windows shortcuts but more powerful. On Fedora, <code>/bin</code>, <code>/sbin</code>, <code>/lib</code> are all symlinks to <code>/usr/</code> equivalents.</span></div>
 
 
 <!-- ═══ SSH ═══ -->
 <h2 id="ssh">🌐 SSH — Secure Shell <span class="module-badge m21">2.1</span></h2>
 
 <div class="ssh-flow">
-  <div class="ssh-box" style="border-color:var(--green)"><span style="color:var(--green)">CLIENT</span><br><span style="font-size:.7rem;color:var(--muted)">your machine</span></div>
+  <div class="ssh-box"><span>CLIENT</span><br><span style="font-size:var(--fs-micro);color:var(--muted)">your machine</span></div>
   <div class="ssh-arrow">──1. connect──▶</div>
-  <div class="ssh-box" style="border-color:var(--accent)"><span style="color:var(--accent)">SERVER</span><br><span style="font-size:.7rem;color:var(--muted)">remote machine</span></div>
+  <div class="ssh-box"><span>SERVER</span><br><span style="font-size:var(--fs-micro);color:var(--muted)">remote machine</span></div>
   <div class="ssh-arrow">◀──2. public key──</div>
-  <div style="font-size:.78rem;color:var(--muted)">3. Secure channel established → 4. Authenticate</div>
+  <div style="font-size:var(--fs-small);color:var(--muted)">3. Secure channel established → 4. Authenticate</div>
 </div>
 
 <h3>SSH server (on the server machine)</h3>
@@ -862,9 +1025,9 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
 <span class="comment"># PasswordAuthentication yes  →  PasswordAuthentication no</span>
 <span class="cmd">sudo systemctl restart sshd</span></pre>
 
-<div class="tip"><span class="icon">💡</span><span><strong>ED25519</strong> is the modern preferred key type (elliptic curve). Use it when available: <code>ssh-keygen -t ed25519</code></span></div>
-<div class="warn"><span class="icon">⚠</span><span>Never use <strong>SSH-1</strong>. It is fundamentally broken. Always use SSH-2 (the default in OpenSSH).</span></div>
-<div class="info"><span class="icon">ℹ</span><span>Use <code>sudoedit</code> instead of <code>sudo nano</code> when editing system files. It works via a temp file, protecting against corruption if something goes wrong mid-edit.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span><strong>ED25519</strong> is the modern preferred key type (elliptic curve). Use it when available: <code>ssh-keygen -t ed25519</code></span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Never use <strong>SSH-1</strong>. It is fundamentally broken. Always use SSH-2 (the default in OpenSSH).</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Use <code>sudoedit</code> instead of <code>sudo nano</code> when editing system files. It works via a temp file, protecting against corruption if something goes wrong mid-edit.</span></div>
 
 
 <!-- ═══ GNUPG ═══ -->
@@ -903,7 +1066,7 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
   </tbody>
 </table></div>
 
-<div class="info"><span class="icon">ℹ</span><span>GnuPG stores keys in <span class="path">~/.gnupg/</span>. Install with <code>sudo dnf install gnupg2</code> if not present. Put <code>-d</code>, <code>-c</code>, <code>-e</code> options <strong>last</strong> — GnuPG is quirky about option order.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>GnuPG stores keys in <span class="path">~/.gnupg/</span>. Install with <code>sudo dnf install gnupg2</code> if not present. Put <code>-d</code>, <code>-c</code>, <code>-e</code> options <strong>last</strong> — GnuPG is quirky about option order.</span></div>
 
 
 <!-- ═══ OPENSSL ═══ -->
@@ -919,7 +1082,7 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
 
 <span class="comment"># Decrypt</span>
 <span class="cmd">openssl enc</span> <span class="flag">-d -camellia-256-ecb</span> <span class="flag">-in</span> <span class="arg">message.enc</span> <span class="flag">-out</span> <span class="arg">message_decrypted.txt</span> <span class="flag">-pass pass:</span><span class="arg">MyPassword</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>ECB mode is for demos only. Use CBC or GCM in real usage. Install OpenSSL with <code>sudo dnf install openssl</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>ECB mode is for demos only. Use CBC or GCM in real usage. Install OpenSSL with <code>sudo dnf install openssl</code>.</span></div>
 
 
 <!-- ═══ SYSTEMD ═══ -->
@@ -927,13 +1090,15 @@ PATH=<span class="arg">"$HOME/cool/scripts:$HOME/.local/bin:$HOME/bin:$PATH"</sp
 
 <h3>Linux boot process</h3>
 <div class="boot-steps">
-  <div class="boot-step"><span class="boot-step-num">1</span><div><span class="boot-step-name">BIOS/UEFI</span> <span class="boot-step-desc">executes the Master Boot Record (MBR)</span></div></div>
+  <div class="boot-step"><span class="boot-step-num">1</span><div><span class="boot-step-name">BIOS/UEFI</span> <span class="boot-step-desc">firmware starts — BIOS reads the Master Boot Record (MBR)</span></div></div>
   <div class="boot-step"><span class="boot-step-num">2</span><div><span class="boot-step-name">MBR</span> <span class="boot-step-desc">executes the bootloader (e.g. GRUB)</span></div></div>
   <div class="boot-step"><span class="boot-step-num">3</span><div><span class="boot-step-name">Bootloader</span> <span class="boot-step-desc">executes the kernel</span></div></div>
   <div class="boot-step"><span class="boot-step-num">4</span><div><span class="boot-step-name">Kernel</span> <span class="boot-step-desc">executes <code>/sbin/init</code> — which is systemd (PID 1)</span></div></div>
   <div class="boot-step"><span class="boot-step-num">5</span><div><span class="boot-step-name">systemd</span> <span class="boot-step-desc">executes targets — the systemd replacement for legacy SysV runlevels (not literally called "runlevels" anymore)</span></div></div>
   <div class="boot-step"><span class="boot-step-num">6</span><div><span class="boot-step-name">Target programs</span> <span class="boot-step-desc">are executed — login screen appears</span></div></div>
 </div>
+
+<div class="info"><span class="lab lab-note">NOTE</span><span>The MBR path is the legacy <strong>BIOS</strong> boot. Modern <strong>UEFI</strong> firmware skips the MBR and loads the bootloader straight from the EFI System Partition — the rest of the chain is the same.</span></div>
 
 <h3>systemctl — Service management</h3>
 <div class="tbl-wrap"><table>
@@ -967,7 +1132,7 @@ ExecReload=<span class="arg">/usr/bin/myprogram -k</span>  <span class="comment"
 
 [Install]
 WantedBy=<span class="arg">default.target</span>   <span class="comment"># enable on normal system boot</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>Service files for installed software go in <span class="path">/etc/systemd/system/</span>. After creating or editing a service file, run <code>sudo systemctl daemon-reload</code> before starting it.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Service files for installed software go in <span class="path">/etc/systemd/system/</span>. After creating or editing a service file, run <code>sudo systemctl daemon-reload</code> before starting it.</span></div>
 
 
 <!-- ═══ CRON ═══ -->
@@ -1018,8 +1183,8 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 <span class="comment"># Weekdays 08-16, every hour</span>
 <span class="output">0 8-16 * * 1-5  /path/to/script.sh</span></pre>
 
-<div class="warn"><span class="icon">⚠</span><span>Percent signs (%) in cron commands must be escaped as <code>\%</code> — cron interprets them as newlines.</span></div>
-<div class="info"><span class="icon">ℹ</span><span>Install cron on Fedora: <code>sudo dnf install cronie cronie-anacron</code>. Verify it's running: <code>systemctl status crond</code></span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Percent signs (%) in cron commands must be escaped as <code>\%</code> — cron interprets them as newlines.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Install cron on Fedora: <code>sudo dnf install cronie cronie-anacron</code>. Verify it's running: <code>systemctl status crond</code></span></div>
 
 <h3>at — One-time scheduled tasks</h3>
 <pre><span class="cmd">at</span> <span class="arg">now +1 hour</span>     <span class="comment"># schedule a task 1 hour from now</span>
@@ -1042,7 +1207,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
     <tr><td><code>journalctl -u &lt;service&gt; | grep error</code></td><td>Pipe to grep for specific words</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>journald logs are in binary format — you can only read them with <code>journalctl</code>, not <code>cat</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>journald logs are in binary format — you can only read them with <code>journalctl</code>, not <code>cat</code>.</span></div>
 
 
 <!-- ═══ PROCESSES ═══ -->
@@ -1066,9 +1231,9 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
   <div class="stat-cell"><span class="stat-letter">R</span><span class="stat-name">Running</span><span class="stat-desc">Actively using CPU right now</span></div>
   <div class="stat-cell"><span class="stat-letter">S</span><span class="stat-name">Sleeping</span><span class="stat-desc">Waiting for input or event</span></div>
   <div class="stat-cell"><span class="stat-letter">T</span><span class="stat-name">Stopped</span><span class="stat-desc">Suspended by job control (Ctrl+Z, SIGSTOP) or a debugger — not "exiting"</span></div>
-  <div class="stat-cell"><span class="stat-letter" style="color:var(--red)">Z</span><span class="stat-name">Zombie</span><span class="stat-desc">Stopped but not cleaned up by parent</span></div>
-  <div class="stat-cell"><span class="stat-letter" style="color:var(--yellow)">&lt;</span><span class="stat-name">High priority</span><span class="stat-desc">Gets more CPU time than normal</span></div>
-  <div class="stat-cell"><span class="stat-letter" style="color:var(--green)">l</span><span class="stat-name">Multi-threaded</span><span class="stat-desc">Multiple threads, uses multiple cores</span></div>
+  <div class="stat-cell"><span class="stat-letter">Z</span><span class="stat-name">Zombie</span><span class="stat-desc">Finished running but not yet cleaned up ("reaped") by its parent — dead, not stopped</span></div>
+  <div class="stat-cell"><span class="stat-letter">&lt;</span><span class="stat-name">High priority</span><span class="stat-desc">Gets more CPU time than normal</span></div>
+  <div class="stat-cell"><span class="stat-letter">l</span><span class="stat-name">Multi-threaded</span><span class="stat-desc">Multiple threads, uses multiple cores</span></div>
 </div>
 
 <h3>Kill signals</h3>
@@ -1095,7 +1260,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 <span class="cmd">pidof</span> <span class="arg">nano</span>         <span class="comment"># → returns PID e.g. 3360</span>
 <span class="cmd">kill</span> <span class="arg">3360</span>          <span class="comment"># send SIGTERM</span>
 <span class="cmd">kill</span> <span class="flag">-9</span> <span class="arg">3360</span>       <span class="comment"># force kill if SIGTERM didn't work</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>Every process is a child of PID 1 (systemd). Processes are created via <strong>fork</strong> (clone parent) and <strong>exec</strong> (modify the clone) calls.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Every process is a child of PID 1 (systemd). Processes are created via <strong>fork</strong> (clone parent) and <strong>exec</strong> (modify the clone) calls.</span></div>
 
 
 <!-- ═══ FILESYSTEMS & MOUNTING ═══ -->
@@ -1125,8 +1290,8 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
   </tbody>
 </table></div>
 
-<div class="warn"><span class="icon">⚠</span><span>Always <code>umount</code> before unplugging a USB drive. Failure to do so risks data loss or corruption, especially with journaling filesystems.</span></div>
-<div class="tip"><span class="icon">💡</span><span>If you get "target is busy" when unmounting — you're probably cd'd into the mount point. Run <code>cd ~</code> first, then unmount.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Always <code>umount</code> before unplugging a USB drive. Failure to do so risks data loss or corruption, especially with journaling filesystems.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>If you get "target is busy" when unmounting — you're probably cd'd into the mount point. Run <code>cd ~</code> first, then unmount.</span></div>
 
 <h3>Persistent mount points — /etc/fstab</h3>
 <pre><span class="comment"># /etc/fstab — each line = one mount point</span>
@@ -1135,8 +1300,8 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 
 <span class="comment"># Get the UUID of a device:</span>
 <span class="cmd">sudo blkid</span>   <span class="comment"># copy the UUID= value from the relevant device</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>Always use <strong>UUIDs</strong> in /etc/fstab, not device paths like <code>/dev/sda1</code>. Device paths can change if a drive fails or moves; UUIDs stay constant. Try <code>man fstab</code> — config files have man pages too!</span></div>
-<div class="info"><span class="icon">ℹ</span><span><strong>dump</strong> column: legacy backup-utility flag, almost always <code>0</code> today (anachronism). <strong>pass</strong> column: fsck check order — <code>0</code> = never check, <code>1</code> = root filesystem (checked first), <code>2</code> = all other filesystems.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Always use <strong>UUIDs</strong> in /etc/fstab, not device paths like <code>/dev/sda1</code>. Device paths can change if a drive fails or moves; UUIDs stay constant. Try <code>man fstab</code> — config files have man pages too!</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span><strong>dump</strong> column: legacy backup-utility flag, almost always <code>0</code> today (anachronism). <strong>pass</strong> column: fsck check order — <code>0</code> = never check, <code>1</code> = root filesystem (checked first), <code>2</code> = all other filesystems.</span></div>
 
 
 <!-- ═══ HARDWARE ═══ -->
@@ -1157,6 +1322,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 
 <!-- ═══ VIM ═══ -->
 <h2 id="vim">📄 Vim — Text Editor <span class="module-badge m24">2.4</span></h2>
+<p class="fineprint">* The operator's terminal upstairs refuses to launch vim. It claims this is for your safety. It is correct.</p>
 
 <div class="vim-modes">
   <div class="vim-mode normal"><div class="vim-mode-name">NORMAL</div><div class="vim-mode-key">Esc → returns here from any mode</div><div class="vim-mode-desc">Default mode. Every key is a shortcut/command. Navigation and operations happen here.</div></div>
@@ -1184,15 +1350,15 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 </table></div>
 
 <h3>Normal mode — Movement (hjkl)</h3>
-<div class="diagram" style="text-align:center;font-size:1rem;line-height:2.5">
-  <span style="color:var(--muted)">◀ </span><span class="key" style="font-size:1rem;padding:.3rem .6rem">h</span>
-  <span style="font-size:1.5rem;margin:0 1rem;color:var(--muted)">·</span>
-  <span class="key" style="font-size:1rem;padding:.3rem .6rem">j</span><span style="color:var(--muted)"> ▼</span>
-  <span style="font-size:1.5rem;margin:0 1rem;color:var(--muted)">·</span>
-  <span class="key" style="font-size:1rem;padding:.3rem .6rem">k</span><span style="color:var(--muted)"> ▲</span>
-  <span style="font-size:1.5rem;margin:0 1rem;color:var(--muted)">·</span>
-  <span style="color:var(--muted)"> </span><span class="key" style="font-size:1rem;padding:.3rem .6rem">l</span><span style="color:var(--muted)"> ▶</span>
-  <br><span style="font-size:.75rem;color:var(--muted)">Use these instead of arrow keys — keeps hands on home row</span>
+<div class="diagram" style="text-align:center;font-size:var(--fs-h2);line-height:2.5">
+  <span style="color:var(--muted)">◀ </span><span class="key" style="font-size:var(--fs-h2);padding:.3rem .6rem">h</span>
+  <span style="font-size:var(--fs-display);margin:0 1rem;color:var(--muted)">·</span>
+  <span class="key" style="font-size:var(--fs-h2);padding:.3rem .6rem">j</span><span style="color:var(--muted)"> ▼</span>
+  <span style="font-size:var(--fs-display);margin:0 1rem;color:var(--muted)">·</span>
+  <span class="key" style="font-size:var(--fs-h2);padding:.3rem .6rem">k</span><span style="color:var(--muted)"> ▲</span>
+  <span style="font-size:var(--fs-display);margin:0 1rem;color:var(--muted)">·</span>
+  <span style="color:var(--muted)"> </span><span class="key" style="font-size:var(--fs-h2);padding:.3rem .6rem">l</span><span style="color:var(--muted)"> ▶</span>
+  <br><span style="font-size:var(--fs-small);color:var(--muted)">Use these instead of arrow keys — keeps hands on home row</span>
 </div>
 
 <h3>Normal mode — Essential keys</h3>
@@ -1231,14 +1397,14 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 
 <h3>Operators + Motions (the real power of Vim)</h3>
 <div class="diagram">
-  <span style="color:var(--accent)">operator</span> + <span style="color:var(--orange)">motion</span> = action on a chunk of text<br><br>
-  <span style="color:var(--cyan)">d</span><span style="color:var(--orange)">w</span>  <span style="color:var(--muted)">delete next word</span><br>
-  <span style="color:var(--cyan)">d</span><span style="color:var(--orange)">b</span>  <span style="color:var(--muted)">delete previous word</span><br>
-  <span style="color:var(--cyan)">d</span><span style="color:var(--cyan)">d</span>  <span style="color:var(--muted)">delete whole line (operator doubled = whole line)</span><br>
-  <span style="color:var(--cyan)">y</span><span style="color:var(--orange)">w</span>  <span style="color:var(--muted)">yank (copy) next word</span><br>
-  <span style="color:var(--cyan)">p</span>   <span style="color:var(--muted)">put (paste) after cursor</span><br>
-  <span style="color:var(--orange)">5</span><span style="color:var(--cyan)">d</span><span style="color:var(--orange)">b</span>  <span style="color:var(--muted)">delete 5 previous words (count + operator + motion)</span><br>
-  <span style="color:var(--orange)">7</span><span style="color:var(--orange)">w</span>  <span style="color:var(--muted)">move forward 7 words</span>
+  <span style="color:var(--code-cmd)">operator</span> + <span style="color:var(--code-flag)">motion</span> = action on a chunk of text<br><br>
+  <span style="color:var(--code-cmd)">d</span><span style="color:var(--code-flag)">w</span>  <span style="color:var(--muted)">delete next word</span><br>
+  <span style="color:var(--code-cmd)">d</span><span style="color:var(--code-flag)">b</span>  <span style="color:var(--muted)">delete previous word</span><br>
+  <span style="color:var(--code-cmd)">d</span><span style="color:var(--code-cmd)">d</span>  <span style="color:var(--muted)">delete whole line (operator doubled = whole line)</span><br>
+  <span style="color:var(--code-cmd)">y</span><span style="color:var(--code-flag)">w</span>  <span style="color:var(--muted)">yank (copy) next word</span><br>
+  <span style="color:var(--code-cmd)">p</span>   <span style="color:var(--muted)">put (paste) after cursor</span><br>
+  <span style="color:var(--code-flag)">5</span><span style="color:var(--code-cmd)">d</span><span style="color:var(--code-flag)">b</span>  <span style="color:var(--muted)">delete 5 previous words (count + operator + motion)</span><br>
+  <span style="color:var(--code-flag)">7</span><span style="color:var(--code-flag)">w</span>  <span style="color:var(--muted)">move forward 7 words</span>
 </div>
 
 <h3>Visual mode</h3>
@@ -1251,17 +1417,21 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
   </tbody>
 </table></div>
 
-<div class="tip"><span class="icon">💡</span><span>Run <code>vimtutor</code> in the terminal for an interactive walkthrough. You cannot learn Vim by reading alone — you learn by doing.</span></div>
-<div class="info"><span class="icon">ℹ</span><span>Vim config lives in <span class="path">~/.vimrc</span>. Plugins managed with <strong>vim-plug</strong>. <code>vi</code> is always available on servers; knowing Vim means knowing vi.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Run <code>vimtutor</code> in the terminal for an interactive walkthrough. You cannot learn Vim by reading alone — you learn by doing.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Vim config lives in <span class="path">~/.vimrc</span>. Plugins managed with <strong>vim-plug</strong>. <code>vi</code> is always available on servers; knowing Vim means knowing vi.</span></div>
 
 
 
 
+</section>
+
+<section class="modband band-m3">
+<div class="band-label">Module 3 — Files, Nets &amp; Containers</div>
 <!-- ══════════════════════ MODULE 3 ══════════════════════ -->
 
 <!-- ═══ ARCHIVING / COMPRESSION / BACKUP ═══ -->
 <h2 id="backup">📦 Archiving, Compression &amp; Backup <span class="module-badge m31">3.1</span></h2>
-<div class="info"><span class="icon">ℹ</span><span><strong>Archiving</strong> = combining files into one (no size change — can even grow from overhead). <strong>Compression</strong> = reversibly shrinking size. Two separate operations, usually done together. <strong>Lossy</strong> (e.g. JPEG) discards data permanently — not the same thing as "compressed."</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span><strong>Archiving</strong> = combining files into one (no size change — can even grow from overhead). <strong>Compression</strong> = reversibly shrinking size. Two separate operations, usually done together. <strong>Lossy</strong> (e.g. JPEG) discards data permanently — not the same thing as "compressed."</span></div>
 
 <h3>Compression utility comparison</h3>
 <div class="tbl-wrap"><table>
@@ -1270,10 +1440,10 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
     <tr><td><code>gzip</code></td><td>LZ77</td><td>Worst-ish</td><td>Fast</td><td><strong>Fastest</strong></td><td><code>pigz</code></td></tr>
     <tr><td><code>bzip2</code></td><td>Burrows-Wheeler</td><td>Mid</td><td>Slower</td><td><strong>Worst</strong> (up to 10× slower than gzip)</td><td><code>pbzip2</code></td></tr>
     <tr><td><code>xz</code></td><td>LZMA</td><td><strong>Best</strong></td><td>Slowest (scales <code>-0</code>…<code>-9</code>)</td><td>Mid</td><td><code>pxz</code></td></tr>
-    <tr><td><code>zip</code></td><td>CRC</td><td>Worst</td><td>—</td><td>—</td><td>none possible (CRC can't be parallelised)</td></tr>
+    <tr><td><code>zip</code></td><td>DEFLATE</td><td>Worst</td><td>—</td><td>—</td><td>— <span style="color:var(--muted)">(course table says "CRC" — CRC is actually just zip's error-checksum, not its compression algorithm)</span></td></tr>
   </tbody>
 </table></div>
-<div class="tip"><span class="icon">💡</span><span>Popularity in practice: gzip &gt; bzip2 &gt; xz &gt; zip. <code>zip</code> is the only format here that archives <strong>and</strong> compresses in one step — tar needs a separate compressor.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Popularity in practice: gzip &gt; bzip2 &gt; xz &gt; zip. <code>zip</code> is the only format here that archives <strong>and</strong> compresses in one step — tar needs a separate compressor.</span></div>
 
 <h3>tar — archiving</h3>
 <pre><span class="cmd">tar</span> <span class="flag">-cf</span> <span class="arg">archive.tar *</span>              <span class="comment"># create archive, no compression</span>
@@ -1281,7 +1451,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 <span class="cmd">tar</span> <span class="flag">-tf</span> <span class="arg">archive.tar.xz</span>            <span class="comment"># list contents WITHOUT extracting</span>
 <span class="cmd">tar</span> <span class="flag">-czf/-xzf</span> <span class="arg">…</span>  <span class="cmd">tar</span> <span class="flag">-cjf/-xjf</span> <span class="arg">…</span>  <span class="cmd">tar</span> <span class="flag">-cJf/-xJf</span> <span class="arg">…</span>   <span class="comment"># gzip / bzip2 / xz shortcuts</span>
 <span class="cmd">tar</span> <span class="flag">-I</span> <span class="arg">&lt;compressor&gt;</span> <span class="flag">-cf</span> <span class="arg">out.tar.zst dir/</span>  <span class="comment"># arbitrary compressor via -I</span></pre>
-<div class="warn"><span class="icon">⚠</span><span>Course material lists <code>-a</code> as the <strong>append</strong> flag. Real GNU tar disagrees: <code>-a</code>/<code>--auto-compress</code> auto-detects compression from the filename, and append is <code>-r</code>/<code>--append</code> (long form only, no short <code>-a</code> in most tar builds). Know the course's stated version for the exam, but don't rely on <code>-a</code> to append in a real terminal.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Course material lists <code>-a</code> as the <strong>append</strong> flag. Real GNU tar disagrees: <code>-a</code>/<code>--auto-compress</code> auto-detects compression from the filename, and append is <code>-r</code>/<code>--append</code> (long form only, no short <code>-a</code> in most tar builds). Know the course's stated version for the exam, but don't rely on <code>-a</code> to append in a real terminal.</span></div>
 
 <h3>Standalone compression — gzip / bzip2 / xz</h3>
 <div class="tbl-wrap"><table>
@@ -1296,7 +1466,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 </table></div>
 
 <h3>Data corruption &amp; bit rot</h3>
-<div class="warn"><span class="icon">⚠</span><span><strong>Bit rot</strong> (mostly cosmic background radiation) is inevitable over time. Filesystems self-correct via <strong>Hamming codes</strong> — but only while mounted and periodically checked. Heavily <strong>compressed</strong> files are more fragile: compression removes redundancy, so a single flipped bit can irretrievably corrupt the file. Mitigate critical long-term storage with RAID 5 and frequent backups.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Bit rot</strong> (mostly cosmic background radiation) is inevitable over time. The course says filesystems self-correct via <strong>Hamming codes</strong> — in reality, only checksumming filesystems like ZFS/Btrfs detect bit rot (Hamming codes live mostly in ECC RAM); ext4 does not self-correct. Heavily <strong>compressed</strong> files are more fragile: compression removes redundancy, so a single flipped bit can irretrievably corrupt the file. Mitigate critical long-term storage with RAID 5 and frequent backups.</span></div>
 
 <h3>rsync — efficient backup &amp; sync</h3>
 <div class="tbl-wrap"><table>
@@ -1311,17 +1481,17 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 </table></div>
 <pre><span class="cmd">rsync</span> <span class="flag">-avh</span> <span class="arg">/Documents janrik@fedora:/var/company/backup</span>   <span class="comment"># local → remote</span>
 <span class="cmd">rsync</span> <span class="flag">-avh</span> <span class="arg">wizard@84.20.1.4:/etc/ /var/configbackup</span>       <span class="comment"># remote → local</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Trailing slash on the <strong>source</strong> path = copy the directory's <em>contents</em>. No trailing slash = copy the directory itself. Same convention applies later to Docker's <code>COPY</code>.</span></div>
-<div class="info"><span class="icon">ℹ</span><span>SFTP, SCP, and rsync are all SSH-based transfer methods. SFTP = interactive session; SCP = simple one-shot copy; rsync = delta/incremental sync — best choice for repeat backups.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Trailing slash on the <strong>source</strong> path = copy the directory's <em>contents</em>. No trailing slash = copy the directory itself. Same convention applies later to Docker's <code>COPY</code>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>SFTP, SCP, and rsync are all SSH-based transfer methods. SFTP = interactive session; SCP = simple one-shot copy; rsync = delta/incremental sync — best choice for repeat backups.</span></div>
 
 <h3>Backup scheduling — reasoning, not memorising</h3>
-<div class="info"><span class="icon">ℹ</span><span>Exam-style scenario: given business hours, power-off windows, and a ~1-2hr backup job, you're expected to <strong>reason about a safe cron window</strong> (e.g. after hours-close, before power-off), not recall one "correct" schedule. Know your <a href="#cron">cron syntax</a> cold and think in terms of constraints.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Exam-style scenario: given business hours, power-off windows, and a ~1-2hr backup job, you're expected to <strong>reason about a safe cron window</strong> (e.g. after hours-close, before power-off), not recall one "correct" schedule. Know your <a href="#cron">cron syntax</a> cold and think in terms of constraints.</span></div>
 
 
 <!-- ═══ NETWORKING BASICS ═══ -->
 <h2 id="netbasics">🌐 Networking Basics <span class="module-badge m32">3.2</span></h2>
-<div class="warn"><span class="icon">⚠</span><span><strong>Key exam point:</strong> changes made with <code>ifconfig</code>/<code>ip</code> are <strong>temporary</strong> (lost on reboot). Changes made with <strong>NetworkManager</strong> (<code>nmcli</code>/<code>nmtui</code>) are <strong>persistent</strong>.</span></div>
-<div class="info"><span class="icon">ℹ</span><span><code>ifconfig</code> is legacy/deprecated (unmaintained since ~2020, may not work with newest hardware). <code>ip</code> is the modern replacement and Red Hat's tool of choice — <code>ip address</code>, <code>ip addr</code>, <code>ip a</code> are all equivalent.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Key exam point:</strong> changes made with <code>ifconfig</code>/<code>ip</code> are <strong>temporary</strong> (lost on reboot). Changes made with <strong>NetworkManager</strong> (<code>nmcli</code>/<code>nmtui</code>) are <strong>persistent</strong>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span><code>ifconfig</code> is legacy/deprecated (unmaintained since ~2020, may not work with newest hardware). <code>ip</code> is the modern replacement and Red Hat's tool of choice — <code>ip address</code>, <code>ip addr</code>, <code>ip a</code> are all equivalent.</span></div>
 
 <div class="tbl-wrap"><table>
   <thead><tr><th>Field</th><th>Example</th><th>Meaning</th></tr></thead>
@@ -1347,7 +1517,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
   <span class="cmd">save</span>
   <span class="cmd">quit</span>                                        <span class="comment"># or Ctrl+D</span>
 <span class="cmd">sudo systemctl restart NetworkManager</span>       <span class="comment"># apply the changes</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Without <code>goto</code>, prefix every setting instead: <code>set ipv4.addresses 192.0.2.1/24</code>.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Without <code>goto</code>, prefix every setting instead: <code>set ipv4.addresses 192.0.2.1/24</code>.</span></div>
 
 <h3>nmtui — TUI configuration</h3>
 <div class="boot-steps">
@@ -1384,12 +1554,12 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 <pre><span class="cmd">sudo ip addr add</span> <span class="arg">192.0.2.1/24 dev eth0</span>
 <span class="cmd">sudo ip link set</span> <span class="arg">eth0 up</span>
 <span class="cmd">sudo ip route add default via</span> <span class="arg">192.0.2.254</span></pre>
-<div class="warn"><span class="icon">⚠</span><span>Temporary only — lost on reboot. Use nmcli/nmtui when the config needs to survive a restart.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Temporary only — lost on reboot. Use nmcli/nmtui when the config needs to survive a restart.</span></div>
 
 
 <!-- ═══ CONTAINERS & DOCKER ═══ -->
 <h2 id="containers">🐳 Containers &amp; Docker <span class="module-badge m33">3.3</span></h2>
-<div class="info"><span class="icon">ℹ</span><span>A <strong>container</strong> isolates/virtualises software from the OS without emulating a full guest OS — no hypervisor. Usually one container = one application/task.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>A <strong>container</strong> isolates/virtualises software from the OS without emulating a full guest OS — no hypervisor. Usually one container = one application/task.</span></div>
 
 <div class="tbl-wrap"><table>
   <thead><tr><th></th><th>Container</th><th>VM</th></tr></thead>
@@ -1400,7 +1570,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
     <tr><td>Typical use</td><td>Single app/service, disposable</td><td>Multi-purpose, stronger isolation</td></tr>
   </tbody>
 </table></div>
-<div class="edit-note"><span class="icon">📎</span><span>The module assigns this comparison as a research task rather than supplying it directly — the table above fills that gap with general knowledge.</span></div>
+<div class="edit-note"><span class="lab lab-course">COURSE</span><span>The module assigns this comparison as a research task rather than supplying it directly — the table above fills that gap with general knowledge.</span></div>
 
 <h3>Docker terminology, untangled</h3>
 <div class="tbl-wrap"><table>
@@ -1411,14 +1581,14 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
     <tr><td>Docker Engine</td><td>The actual free/open-source runtime — "Docker" in this course = Docker Engine</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>Fedora package name is <code>moby-engine</code> — Docker Engine is maintained under the Moby Project.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Fedora package name is <code>moby-engine</code> — Docker Engine is maintained under the Moby Project.</span></div>
 
 <h3>Dockerfile anatomy</h3>
 <pre><span class="comment"># Comment lines start with #</span>
 <span class="cmd">FROM</span> <span class="arg">alpine:latest</span>              <span class="comment"># base image — required, first line</span>
 <span class="cmd">COPY</span> <span class="arg">./public-html/ /etc/dest</span>     <span class="comment"># trailing slash = copy contents, not the dir itself</span>
 <span class="cmd">RUN</span> <span class="arg">apk add neovim</span>              <span class="comment"># executed inside an intermediate container during build</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Only two instructions really matter for a basic image: <code>COPY</code> and <code>RUN</code>. The Dockerfile itself can live anywhere — referenced by path at build time.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Only two instructions really matter for a basic image: <code>COPY</code> and <code>RUN</code>. The Dockerfile itself can live anywhere — referenced by path at build time.</span></div>
 
 <h3>Full workflow — deploying a website</h3>
 <pre><span class="cmd">docker pull</span> <span class="arg">httpd</span>                                    <span class="comment"># pull the official Apache image</span>
@@ -1426,7 +1596,7 @@ WantedBy=<span class="arg">default.target</span>   <span class="comment"># enabl
 <span class="cmd">docker run</span> <span class="flag">-dit --name</span> <span class="arg">web-server</span> <span class="flag">-p</span> <span class="arg">8080:80 lnx-web-server</span>  <span class="comment"># deploy container</span>
 <span class="cmd">docker ps</span>                                              <span class="comment"># list running containers</span>
 <span class="cmd">docker exec</span> <span class="flag">-it</span> <span class="arg">web-server sh</span>                        <span class="comment"># shell into a running container</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Verify with a browser at <code>localhost:8080</code>. <code>docker help</code> / <code>docker --help</code> for the full command reference.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Verify with a browser at <code>localhost:8080</code>. <code>docker help</code> / <code>docker --help</code> for the full command reference.</span></div>
 
 <h3>Installing Docker CE on Fedora (manual repo)</h3>
 <pre><span class="comment"># Fedora 42+ dnf5 broke `config-manager --add-repo` — add the repo file manually:</span>
@@ -1447,12 +1617,12 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 <span class="cmd">docker pull</span> <span class="arg">docker.io/library/httpd:latest</span>   <span class="comment"># explicit registry = normal Docker Hub behaviour</span>
 <span class="cmd">docker run</span> <span class="flag">-d -p</span> <span class="arg">8080:80 --name web httpd</span>
 <span class="cmd">sudo touch</span> <span class="arg">/etc/containers/nodocker</span>       <span class="comment"># silence the "emulating docker via podman" warning</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>With <code>podman-docker</code> installed, the <code>docker</code> command is a <strong>shim</strong> to Podman — same run/exec/ps syntax works under either. Fedora prefers Podman (daemonless, rootless-friendly); the exam's worked examples use real Docker CLI syntax, which happens to work identically against both.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>With <code>podman-docker</code> installed, the <code>docker</code> command is a <strong>shim</strong> to Podman — same run/exec/ps syntax works under either. Fedora prefers Podman (daemonless, rootless-friendly); the exam's worked examples use real Docker CLI syntax, which happens to work identically against both.</span></div>
 
 
 <!-- ═══ COMPILING FROM SOURCE ═══ -->
 <h2 id="compile">🛠 Compiling From Source <span class="module-badge m34">3.4</span></h2>
-<div class="info"><span class="icon">ℹ</span><span><strong>Source code</strong> (human-written) is transcribed by a <strong>compiler</strong> into a binary/machine-code executable — a one-way process. <strong>Interpreted</strong> languages (e.g. Python) skip this — they only need an interpreter. A <strong>library</strong> is shared code reused by multiple programs; <strong>linking</strong> (the final compile step, connecting the program to its libraries) is the most common source of pain.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span><strong>Source code</strong> (human-written) is transcribed by a <strong>compiler</strong> into a binary/machine-code executable — a one-way process. <strong>Interpreted</strong> languages (e.g. Python) skip this — they only need an interpreter. A <strong>library</strong> is shared code reused by multiple programs; <strong>linking</strong> (the final compile step, connecting the program to its libraries) is the most common source of pain.</span></div>
 
 <h3>Why compile from source</h3>
 <div class="reason-grid">
@@ -1466,7 +1636,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 <pre><span class="cmd">./configure</span>     <span class="comment"># Bash script — sets up the build, generates a Makefile (does NOT compile)</span>
 <span class="cmd">make</span>            <span class="comment"># compiles per the Makefile</span>
 <span class="cmd">make install</span>    <span class="comment"># optional — installs the binary + files to system locations (e.g. /usr/local)</span></pre>
-<div class="tip"><span class="icon">💡</span><span>Required packages: <code>make</code>, <code>gcc</code>. There's no universal cheat sheet for compile errors — read the README/COMPILING/BUILDING file in the source tree, then search the exact error.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Required packages: <code>make</code>, <code>gcc</code>. There's no universal cheat sheet for compile errors — read the README/COMPILING/BUILDING file in the source tree, then search the exact error.</span></div>
 
 <h3>Finding source code</h3>
 <div class="tbl-wrap"><table>
@@ -1479,11 +1649,15 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 </table></div>
 <pre><span class="comment"># README instructions are often written for Ubuntu/Debian — translate package names to dnf:</span>
 <span class="cmd">sudo dnf install</span> <span class="arg">git make gcc clang</span>   <span class="comment"># e.g. btop's build deps on Fedora</span></pre>
-<div class="warn"><span class="icon">⚠</span><span>Non-C languages use different toolchains entirely — <code>go build</code> (Go), <code>cargo build</code> (Rust). Not <code>./configure && make</code>.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Non-C languages use different toolchains entirely — <code>go build</code> (Go), <code>cargo build</code> (Rust). Not <code>./configure && make</code>.</span></div>
 
 
 
 
+</section>
+
+<section class="modband band-m4">
+<div class="band-label">Module 4 — Law, GUI &amp; Enterprise</div>
 <!-- ══════════════════════ MODULE 4 ══════════════════════ -->
 
 <!-- ═══ LAW, ETHICS & SOFTWARE ═══ -->
@@ -1504,7 +1678,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
   <div class="freedom-cell"><div class="freedom-num">2</div><div class="freedom-word">Redistribute</div><div class="freedom-desc">Share copies to help others</div></div>
   <div class="freedom-cell"><div class="freedom-num">3</div><div class="freedom-word">Distribute Modified</div><div class="freedom-desc">Requires source code access</div></div>
 </div>
-<div class="info"><span class="icon">ℹ</span><span>"Free" = free <em>speech</em>, not free <em>beer</em> — hence the term <strong>libre software</strong>. Free ≠ gratis: DOOM's code is free but its art assets are paid; Zrythm is AGPLv3 (source free) with paid binaries. FSF explicitly rejects "free and open-source software" as a term — insists on "free software" for precision.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>"Free" = free <em>speech</em>, not free <em>beer</em> — hence the term <strong>libre software</strong>. Free ≠ gratis: DOOM's code is free but its art assets are paid; Zrythm is AGPLv3 (source free) with paid binaries. FSF explicitly rejects "free and open-source software" as a term — insists on "free software" for precision.</span></div>
 
 <h3>Copyright basics</h3>
 <div class="tbl-wrap"><table>
@@ -1525,7 +1699,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>Permissive</td><td>No — functionally equivalent to public domain despite the "open source" label</td><td>MIT, BSD, Apache</td></tr>
   </tbody>
 </table></div>
-<div class="tip"><span class="icon">💡</span><span><strong>Copyleft's "legal virality":</strong> the copyright holder keeps nominal ownership, but licence terms force every derivative to inherit the same licence — with no special revocation right, even for the original author (Linus Torvalds cannot revoke Linux's GPLv2 status).</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span><strong>Copyleft's "legal virality":</strong> the copyright holder keeps nominal ownership, but licence terms force every derivative to inherit the same licence — with no special revocation right, even for the original author (Linus Torvalds cannot revoke Linux's GPLv2 status).</span></div>
 
 <h3>Named copyleft licences</h3>
 <div class="tbl-wrap"><table>
@@ -1538,9 +1712,9 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 </table></div>
 
 <h3>Permissive licence case studies</h3>
-<div class="warn"><span class="icon">⚠</span><span><strong>MINIX → Intel ME:</strong> BSD-licensed MINIX (Tanenbaum) was folded into Intel's closed, undocumented Management Engine — present in every modern Intel CPU. No disclosure obligation under BSD meant no legal recourse. GPLv3 would have forced Intel to disclose ME's source.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>VS Code (MIT):</strong> "open-source" repo, but shipped <em>binaries</em> aren't copyleft — Microsoft can add undisclosed telemetry to what you actually download. Framed as "free labour": unpaid contributors work <em>for</em> Microsoft, not <em>with</em> them. Counter-example: <strong>VSCodium</strong> — same source, built without MS telemetry.</span></div>
-<div class="edit-note"><span class="icon">📎</span><span>The module states plainly it presents no counter-arguments and is "highly biased in favour of free software." A balanced exam answer should also weigh: commercial adoption ease, lower legal overhead for consumers, and stronger contribution incentives under permissive licences.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>MINIX → Intel ME:</strong> BSD-licensed MINIX (Tanenbaum) was folded into Intel's closed, undocumented Management Engine — present in every modern Intel CPU. No disclosure obligation under BSD meant no legal recourse. GPLv3 would have forced Intel to disclose ME's source.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>VS Code (MIT):</strong> "open-source" repo, but shipped <em>binaries</em> aren't copyleft — Microsoft can add undisclosed telemetry to what you actually download. Framed as "free labour": unpaid contributors work <em>for</em> Microsoft, not <em>with</em> them. Counter-example: <strong>VSCodium</strong> — same source, built without MS telemetry.</span></div>
+<div class="edit-note"><span class="lab lab-course">COURSE</span><span>The module states plainly it presents no counter-arguments and is "highly biased in favour of free software." A balanced exam answer should also weigh: commercial adoption ease, lower legal overhead for consumers, and stronger contribution incentives under permissive licences.</span></div>
 
 
 <!-- ═══ GRAPHICAL ENVIRONMENT ═══ -->
@@ -1552,7 +1726,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
   <div class="stack-arrow">↓</div>
   <div class="stack-box"><div class="stack-title">Graphical interface</div><div class="stack-desc">The visible result — what people casually call "the desktop"</div></div>
 </div>
-<div class="info"><span class="icon">ℹ</span><span>Under <strong>X11</strong>, display server and window manager are separate components. Under <strong>Wayland</strong>, they're merged into one — the <strong>Wayland Compositor</strong>.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Under <strong>X11</strong>, display server and window manager are separate components. Under <strong>Wayland</strong>, they're merged into one — the <strong>Wayland Compositor</strong>.</span></div>
 
 <h3>Window manager types</h3>
 <div class="tbl-wrap"><table>
@@ -1563,6 +1737,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>Tiling</td><td>Windows auto-snap into non-overlapping tiles, keyboard-driven, IT-specialist tool</td><td>i3, awesome, dwm, bspwm, xmonad</td></tr>
   </tbody>
 </table></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Course's table, kept as-is for the exam. In reality Mutter and KWin are compositing window managers, while Openbox/Fluxbox/Blackbox are classic stacking ones.</span></div>
 
 <h3>X11 vs Wayland</h3>
 <div class="tbl-wrap"><table>
@@ -1590,7 +1765,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>i3 (tiling)</td><td>—</td><td><strong>No</strong></td><td>Most popular tiling WM, keyboard-driven</td></tr>
   </tbody>
 </table></div>
-<div class="edit-note"><span class="icon">📎</span><span>Course material pairs "GNOME with Compiz" as its window manager. GNOME's actual default WM is historically Mutter (Metacity before it) — Compiz is more associated with Ubuntu's Unity era. Know the module's phrasing for exam-matching, but don't treat it as general fact.</span></div>
+<div class="edit-note"><span class="lab lab-course">COURSE</span><span>Course material pairs "GNOME with Compiz" as its window manager. GNOME's actual default WM is historically Mutter (Metacity before it) — Compiz is more associated with Ubuntu's Unity era. Know the module's phrasing for exam-matching, but don't treat it as general fact.</span></div>
 
 <h3>GUI frameworks</h3>
 <div class="tbl-wrap"><table>
@@ -1602,7 +1777,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>wxWidgets</td><td>—</td><td>Originally Windows, now cross-platform</td><td>—</td></tr>
   </tbody>
 </table></div>
-<div class="tip"><span class="icon">💡</span><span>Framework choice is cosmetic only — every app is still an X11 or Wayland client underneath. Identify a running app's framework: <code>pmap -p &lt;PID&gt; | grep -i gtk</code> (or <code>Qt</code>).</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Framework choice is cosmetic only — every app is still an X11 or Wayland client underneath. Identify a running app's framework: <code>pmap -p &lt;PID&gt; | grep -i gtk</code> (or <code>Qt</code>).</span></div>
 
 <h3>Display managers</h3>
 <div class="tbl-wrap"><table>
@@ -1617,7 +1792,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 <h3>Operational commands</h3>
 <pre><span class="cmd">dnf group list --available</span> <span class="arg">"*desktop"</span>      <span class="comment"># list installable desktop environments</span>
 <span class="cmd">sudo dnf install</span> <span class="arg">@gnome</span>                    <span class="comment"># @ = it's a group, not a package</span></pre>
-<div class="info"><span class="icon">ℹ</span><span>Switch DE at login: gear icon on the display-manager login screen. Multiple DEs can coexist on one system.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Switch DE at login: gear icon on the display-manager login screen. Multiple DEs can coexist on one system.</span></div>
 
 
 <!-- ═══ MIXED ENVIRONMENT ═══ -->
@@ -1642,16 +1817,16 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>Forest</td><td>Multiple trees combined — a <strong>security</strong> unit, not organisational</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>AD holds ~33% market share alone (60%+ including Azure AD). Linux integrates via <strong>SSSD</strong> on Fedora/RHEL — also supports FreeIPA, 389 Directory Server, OpenLDAP.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>AD holds ~33% market share alone (60%+ including Azure AD). Linux integrates via <strong>SSSD</strong> on Fedora/RHEL — also supports FreeIPA, 389 Directory Server, OpenLDAP.</span></div>
 
 <h3>LDAP</h3>
 <div class="ssh-flow">
-  <div class="ssh-box" style="border-color:var(--green)"><span style="color:var(--green)">CLIENT</span></div>
+  <div class="ssh-box"><span>CLIENT</span></div>
   <div class="ssh-arrow">──connect──▶</div>
-  <div class="ssh-box" style="border-color:var(--accent)"><span style="color:var(--accent)">LDAP SERVER</span></div>
-  <div style="font-size:.78rem;color:var(--muted)">authenticate (default: plaintext!) → query object → authorise → close</div>
+  <div class="ssh-box"><span>LDAP SERVER</span></div>
+  <div style="font-size:var(--fs-small);color:var(--muted)">authenticate (default: plaintext!) → query object → authorise → close</div>
 </div>
-<div class="warn"><span class="icon">⚠</span><span>LDAP authentication is <strong>unencrypted plaintext by default</strong> — pair with Kerberos in production. OpenLDAP is the most common free implementation. <strong>FreeIPA + 389 Directory Server</strong> (both Red Hat, both free) roughly replicate Red Hat Directory Server without the licence cost.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>LDAP authentication is <strong>unencrypted plaintext by default</strong> — pair with Kerberos in production. OpenLDAP is the most common free implementation. <strong>FreeIPA + 389 Directory Server</strong> (both Red Hat, both free) roughly replicate Red Hat Directory Server without the licence cost.</span></div>
 
 <div class="tbl-wrap"><table>
   <thead><tr><th></th><th>LDAP</th><th>Active Directory</th></tr></thead>
@@ -1685,11 +1860,11 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
   <div class="boot-step"><span class="boot-step-num">7</span><div><span class="boot-step-name">Trial deployment</span> <span class="boot-step-desc">controlled rollout, monitoring + rollback plan</span></div></div>
   <div class="boot-step"><span class="boot-step-num">8</span><div><span class="boot-step-name">Document</span> <span class="boot-step-desc">record before/after state for regression tracing</span></div></div>
 </div>
-<div class="info"><span class="icon">ℹ</span><span>No centralised tool patches both Linux and Windows — always handled per-OS.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>No centralised tool patches both Linux and Windows — always handled per-OS.</span></div>
 
 <h3>SBOM — Software Bill of Materials</h3>
-<div class="warn"><span class="icon">⚠</span><span>Practice popularised by <strong>Log4Shell</strong> (CVE-2021-44228, Dec 2021) — an RCE in Apache log4j affecting 40%+ of businesses worldwide, triggering a US Executive Order on cybersecurity.</span></div>
-<div class="info"><span class="icon">ℹ</span><span>SBOM = machine-readable metadata identifying a component, its dependencies, and licence data. <strong>Regenerate on every software change</strong> — not a one-time document. Minimum viable identity: <strong>Supplier + Component name + Version</strong> (e.g. GNU Project / tar / 1.34). Standard format: <strong>SPDX</strong> (Linux Foundation, ISO/IEC 5962:2021).</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span>Practice popularised by <strong>Log4Shell</strong> (CVE-2021-44228, Dec 2021) — an RCE in Apache log4j affecting 40%+ of businesses worldwide, triggering a US Executive Order on cybersecurity.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>SBOM = machine-readable metadata identifying a component, its dependencies, and licence data. <strong>Regenerate on every software change</strong> — not a one-time document. Minimum viable identity: <strong>Supplier + Component name + Version</strong> (e.g. GNU Project / tar / 1.34). Standard format: <strong>SPDX</strong> (Linux Foundation, ISO/IEC 5962:2021).</span></div>
 <pre><span class="cmd">syft</span> <span class="arg">dir:/usr/bin</span>              <span class="comment"># SBOM scan of a local directory</span>
 <span class="cmd">syft</span> <span class="arg">nginx</span>                     <span class="comment"># scan a Docker Hub image directly</span>
 <span class="cmd">docker save</span> <span class="arg">&lt;image&gt; &gt; image.tar</span>  <span class="comment"># required before scanning a CUSTOM-built image — syft can't read running containers</span>
@@ -1698,7 +1873,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 
 <!-- ═══ INSTALL GENTOO ═══ -->
 <h2 id="gentoo">🐧 Install Gentoo <span class="module-badge m44">4.4</span></h2>
-<div class="scope"><span class="icon">🎯</span><span><strong>Exam scope:</strong> Gentoo itself is <strong>not</strong> examined — the exam environment stays Fedora. What's assessed is applying Lessons-1-onward fundamentals (CLI, filesystem, syntax) during the install attempt. <strong>Not</strong> assessed: concepts introduced for the first time here — kernel modules, systemd specifics, DHCP client config, OpenRC. The module says explicitly it's fine not to fully grasp these.</span></div>
+<div class="scope"><span class="lab lab-exam">EXAM</span><span><strong>Exam scope:</strong> Gentoo itself is <strong>not</strong> examined — the exam environment stays Fedora. What's assessed is applying Lessons-1-onward fundamentals (CLI, filesystem, syntax) during the install attempt. <strong>Not</strong> assessed: concepts introduced for the first time here — kernel modules, systemd specifics, DHCP client config, OpenRC. The module says explicitly it's fine not to fully grasp these.</span></div>
 
 <div class="tbl-wrap"><table>
   <tbody>
@@ -1709,12 +1884,17 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
     <tr><td>USE flags</td><td>Per-package feature toggles exposed by Portage — Gentoo's core fine-tuning mechanism</td></tr>
   </tbody>
 </table></div>
-<div class="info"><span class="icon">ℹ</span><span>Topics the install touches without a full procedure in this course: kernel config, fstab creation, DHCP/networking setup, OpenRC vs systemd choice, bootloader selection. The module defers entirely to the official Gentoo Handbook for actual steps — this section is intentionally short since the module itself deprioritises Gentoo specifics for the exam.</span></div>
+<div class="info"><span class="lab lab-note">NOTE</span><span>Topics the install touches without a full procedure in this course: kernel config, fstab creation, DHCP/networking setup, OpenRC vs systemd choice, bootloader selection. The module defers entirely to the official Gentoo Handbook for actual steps — this section is intentionally short since the module itself deprioritises Gentoo specifics for the exam.</span></div>
 
 
 
 <!-- ═══ EXAM METHOD & TIPS ═══ -->
+</section>
+
+<section class="modband band-ex">
+<div class="band-label">Exam Method &amp; Tips</div>
 <h2 id="exam">🎯 Exam Method &amp; Tips <span class="module-badge mexam">EXAM</span></h2>
+<p class="fineprint">* If you've already found the other terminal on this page, the exam shell will feel refreshingly consequence-rich. Everything there is logged. As it should be.</p>
 
 <h3>Exam basics — the short version</h3>
 <div class="fact-grid">
@@ -1733,10 +1913,10 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
   <div class="glad-cell glad-a"><div class="glad-letter">3</div><div class="glad-word">Execute</div><div class="glad-desc">Right user, right path, right quoting</div></div>
   <div class="glad-cell glad-d"><div class="glad-letter">4</div><div class="glad-word">Prove</div><div class="glad-desc">Verify it worked before moving on</div></div>
 </div>
-<div class="tip"><span class="icon">💡</span><span>Blanking on a command name but you know the problem? <code>apropos keyword</code> searches all man page descriptions — the open-book power move. Also: <code>Ctrl+R</code> searches your shell history, and Tab completion never typos.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span>Blanking on a command name but you know the problem? <code>apropos keyword</code> searches all man page descriptions — the open-book power move. Also: <code>Ctrl+R</code> searches your shell history, and Tab completion never typos.</span></div>
 
 <h3 id="reverseindex">Problem → Tool reverse index</h3>
-<p style="font-size:.85rem;color:var(--muted);margin-bottom:.4rem">The course's core advice: define commands by the problem they solve, not their name. This table runs in that direction. Full syntax lives in each command's own section — jump via sidebar.</p>
+<p style="font-size:var(--fs-h3);color:var(--muted);margin-bottom:.4rem">The course's core advice: define commands by the problem they solve, not their name. This table runs in that direction. Full syntax lives in each command's own section — jump via sidebar.</p>
 
 <h3>Files, search &amp; disks</h3>
 <div class="tbl-wrap"><table>
@@ -1826,7 +2006,7 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 </table></div>
 
 <h3 id="verify">Prove it worked — verification commands</h3>
-<p style="font-size:.85rem;color:var(--muted);margin-bottom:.4rem">Step 4 of the loop. If the exam asks you to <em>do</em> something, the verification command is your evidence it actually happened.</p>
+<p style="font-size:var(--fs-h3);color:var(--muted);margin-bottom:.4rem">Step 4 of the loop. If the exam asks you to <em>do</em> something, the verification command is your evidence it actually happened.</p>
 <div class="tbl-wrap"><table>
   <thead><tr><th>Claim</th><th>Proof</th></tr></thead>
   <tbody>
@@ -1843,11 +2023,11 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 </table></div>
 
 <h3>Classic exam traps</h3>
-<div class="warn"><span class="icon">⚠</span><span><strong>Wrong user context.</strong> Task fails silently or with "permission denied" because you're a normal user when it needs root — or you're root when the task says "as user X". Check the prompt: <code>$</code> vs <code>#</code>.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>Relative vs absolute paths.</strong> A command that works in one directory breaks in another. When in doubt, <code>pwd</code> first and use absolute paths.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>Spaces and quoting.</strong> Unquoted spaces split arguments. Quote paths and patterns: <code>"My File.txt"</code>, <code>grep "two words" file</code>.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>Forgot <code>daemon-reload</code>.</strong> Edited a unit file and systemd is still running the old version. Reload, then restart the unit.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>Forgot <code>-r</code> on directories.</strong> <code>cp</code> and <code>rm</code> need it for directories. Also: <code>rm -r</code> has no undo — read the path twice.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Wrong user context.</strong> Task fails silently or with "permission denied" because you're a normal user when it needs root — or you're root when the task says "as user X". Check the prompt: <code>$</code> vs <code>#</code>.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Relative vs absolute paths.</strong> A command that works in one directory breaks in another. When in doubt, <code>pwd</code> first and use absolute paths.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Spaces and quoting.</strong> Unquoted spaces split arguments. Quote paths and patterns: <code>"My File.txt"</code>, <code>grep "two words" file</code>.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Forgot <code>daemon-reload</code>.</strong> Edited a unit file and systemd is still running the old version. Reload, then restart the unit.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Forgot <code>-r</code> on directories.</strong> <code>cp</code> and <code>rm</code> need it for directories. Also: <code>rm -r</code> has no undo — read the path twice.</span></div>
 
 <h3>Pre-exam checklist</h3>
 <ul class="checklist">
@@ -1870,16 +2050,18 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 </div>
 
 <h2 id="tips">📌 Tips &amp; Best Practices</h2>
-<div class="warn"><span class="icon">⚠</span><span><strong>Never use Word/LibreOffice to copy commands.</strong> They silently replace hyphens with em-dashes and change quote characters. Use nano, micro, or gedit.</span></div>
-<div class="warn"><span class="icon">⚠</span><span><strong>Avoid spaces in filenames.</strong> <code>cd Linux Course</code> fails (reads as 2 arguments). Use <code>Linux_Course</code> instead.</span></div>
-<div class="tip"><span class="icon">💡</span><span><strong>Use man pages constantly.</strong> Expert admins do. You don't memorise commands — you recognise what problem needs solving and look it up. RTFM.</span></div>
-<div class="tip"><span class="icon">💡</span><span><strong>Be careful with sudo.</strong> Before running a <code>sudo</code> command you found online, read and understand what it does first.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Never use Word/LibreOffice to copy commands.</strong> They silently replace hyphens with em-dashes and change quote characters. Use nano, micro, or gedit.</span></div>
+<div class="warn"><span class="lab lab-warn">WARNING</span><span><strong>Avoid spaces in filenames.</strong> <code>cd Linux Course</code> fails (reads as 2 arguments). Use <code>Linux_Course</code> instead.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span><strong>Use man pages constantly.</strong> Expert admins do. You don't memorise commands — you recognise what problem needs solving and look it up. RTFM.</span></div>
+<div class="tip"><span class="lab lab-tip">TIP</span><span><strong>Be careful with sudo.</strong> Before running a <code>sudo</code> command you found online, read and understand what it does first.</span></div>
+
+</section>
 
 </main>
 </div>
 
 <footer>
-  Linux Fedora Cheat Sheet &nbsp;·&nbsp; FI1AMLI75 — Linux &nbsp;·&nbsp; Noroff Vocational School &nbsp;·&nbsp; Covers Module 1.1 – 4.4
+  Linux Fedora Cheat Sheet &nbsp;·&nbsp; FI1AMLI75 — Linux &nbsp;·&nbsp; Noroff Vocational School &nbsp;·&nbsp; Covers Module 1.1 – 4.4 &nbsp;·&nbsp; v2.9
 </footer>
 
 
@@ -1915,6 +2097,12 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
   if(!input) return;
   function apply(){
     var v = input.value.trim();
+    if(v.toLowerCase() === 'root'){
+      /* You were warned. */
+      document.querySelectorAll('.uname').forEach(function(el){ el.textContent = 'knox'; });
+      if(window.openRootTerminal) window.openRootTerminal();
+      return;
+    }
     if(v === '') v = 'knox';
     document.querySelectorAll('.uname').forEach(function(el){ el.textContent = v; });
   }
@@ -1924,5 +2112,406 @@ gpgkey=https://download.docker.com/linux/fedora/gpg</span>
 })();
 </script>
 
+<script>
+/* ══════════════════════════════════════════════════════════════
+   THE ROOT TERMINAL — an easter egg about consequences.
+   Triggered by typing "root" into the username field,
+   which the document explicitly told you never to do.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  var overlay=null, out=null, inp=null, promptEl=null, term=null;
+  var cwd='/root', melting=false, hist=[], histIdx=-1;
+
+  function freshFS(){ return {
+    'root':{type:'d',children:{
+      'flag.txt':{type:'f',content:'┌──────────────────────────────────────────┐\n│  Nice. You read the fine print.          │\n│                                          │\n│  That instinct — reading carefully and   │\n│  poking at the thing you were told not   │\n│  to poke — is the whole job description  │\n│  in security. Keep it.                   │\n│                                          │\n│  Now type exit and go back to being a    │\n│  normal user, like a professional.       │\n└──────────────────────────────────────────┘'},
+      '.bash_history':{type:'f',content:'chmod 777 / -R\nwhy is everything broken\nhelp\nHELP\nrm -rf --no-preserve-root /\n^C\n^C\n^C\nsudo undo'},
+      'do_not_open.txt':{type:'f',content:'You opened it.\nOf course you opened it.\nThis exact behavior is how you ended up in this terminal.'},
+      'follow_the_white_rabbit.txt':{type:'f',content:'It went into /opt.\nRabbits usually do.'},
+      '.ssh':{type:'d',children:{
+        'authorized_keys':{type:'f',content:'# empty. root trusts no one.\n# root is also not trusted by anyone. it evens out.'}
+      }}
+    }},
+    'opt':{type:'d',children:{
+      'construct':{type:'d',children:{
+        'loading_program.txt':{type:'f',content:'This is the construct. A loading program.\nWe can load anything, from clothing to equipment,\nweapons, training simulations...\n(in practice it is mostly config files)'},
+        'guns.txt':{type:'f',content:'Guns. Lots of guns.\n\n...request denied. This is a Linux course.\nHave a package manager instead. Oh wait — see dnf.'},
+        'kung_fu.pkg':{type:'f',content:'I know kung fu.\n\n$ dnf install kung-fu\nError: Unable to find a match: kung-fu\n\nTypical.'}
+      }}
+    }},
+    'tmp':{type:'d',children:{
+      'definitely_not_a_backdoor.sh':{type:'f',content:'#!/bin/bash\n# nothing to see here\necho "hello, auditor :)"'}
+    }},
+    'etc':{type:'d',children:{
+      'motd':{type:'f',content:'Welcome to fedora. All actions are final. Nothing is logged. Good luck.'},
+      'passwd':{type:'f',content:'root:x:0:0:root:/root:/bin/bash\nknox:x:1000:1000:The Responsible One:/home/knox:/bin/bash'},
+      'shadow':{type:'f',content:'root:$6$rounds=nope$youshouldnotbereadingthis:19900:0:99999:7:::\nknox:$6$rounds=4242$definitelyarealhash:19900:0:99999:7:::'}
+    }},
+    'home':{type:'d',children:{
+      'knox':{type:'d',children:{
+        'homework.txt':{type:'f',content:'Module 2.2 — systemd, services, scheduling.\nStep 1: stop playing with the easter egg.'}
+      }}
+    }},
+    'usr':{type:'d',children:{'bin':{type:'d',children:{
+      'bash':{type:'f',content:'(binary — one of the few survivors)'},
+      'ls':{type:'f',content:'(binary — survivor)'},
+      'cat':{type:'f',content:'(binary — survivor)'},
+      'sudo.broken':{type:'f',content:'(the previous root renamed this out of spite)'}
+    }}}},
+    'var':{type:'d',children:{
+      'log':{type:'d',children:{
+        'audit.log':{type:'f',content:'-- No entries. root actions are not logged. That is the problem. --'}
+      }},
+      'spool':{type:'d',children:{'cron':{type:'d',children:{
+        'root':{type:'f',content:'0 3 * * * /root/definitely_fine.sh  # what could go wrong\n@reboot rm -rf /tmp/*             # this one actually ran'}
+      }}}}
+    }}
+  };}
+  var FS=freshFS();
+
+  function resolve(path){
+    if(!path||path==='~') path='/root';
+    if(path[0]==='~') path='/root'+path.slice(1);
+    var parts=(path[0]==='/'?path:cwd+'/'+path).split('/').filter(Boolean);
+    var stack=[];
+    for(var i=0;i<parts.length;i++){
+      if(parts[i]==='.') continue;
+      else if(parts[i]==='..') stack.pop();
+      else stack.push(parts[i]);
+    }
+    var node={type:'d',children:FS}, trail=[node];
+    for(var j=0;j<stack.length;j++){
+      if(node.type!=='d'||!node.children[stack[j]]) return {node:null,path:'/'+stack.join('/')};
+      node=node.children[stack[j]]; trail.push(node);
+    }
+    return {node:node,path:'/'+stack.join('/'),parentChildren:(trail.length>1?trail[trail.length-2].children:FS),name:stack[stack.length-1]};
+  }
+
+  function shortCwd(){ return cwd==='/root'?'~':(cwd.indexOf('/root/')===0?'~'+cwd.slice(5):cwd); }
+  function promptStr(){ return '[root@fedora '+shortCwd()+']#'; }
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function print(html){ var d=document.createElement('div'); d.innerHTML=html; out.appendChild(d); out.scrollTop=out.scrollHeight; }
+  function printText(s,cls){ print((cls?'<span class="'+cls+'">':'')+esc(s)+(cls?'</span>':'')); }
+
+  function lsOut(node,showHidden){
+    var names=Object.keys(node.children).filter(function(n){return showHidden||n[0]!=='.';}).sort();
+    if(showHidden) names=['.','..'].concat(names);
+    return names.map(function(n){
+      var c=node.children[n];
+      return (c&&c.type==='d')||n==='.'||n==='..'?'<span class="rt-dir">'+esc(n)+'/</span>':esc(n);
+    }).join('  ');
+  }
+
+  function meltdown(){
+    melting=true; term.classList.add('melting');
+    inp.disabled=true;
+    var victims=['/usr/bin/bash','/usr/bin/ls','/usr/bin/cat','/usr/bin/sudo','/etc/passwd','/etc/fstab','/home/knox','/home/knox/homework.txt','/boot/vmlinuz','/usr/lib/systemd','/var/log','/etc/ssh','/usr/bin/vim  (some would call this a feature)','/usr/bin/dnf','/etc/hostname','/root/flag.txt','... everything else'];
+    var i=0;
+    var iv=setInterval(function(){
+      if(i<victims.length){ printText('removed \''+victims[i]+'\'','rt-dim'); i++; }
+      else{
+        clearInterval(iv);
+        setTimeout(function(){
+          print('<span class="rt-red">Segmentation fault (core dumped)</span>');
+          setTimeout(function(){
+            out.innerHTML='';
+            print('<span class="rt-red">░░░░░░░░░░░░░░░  SYSTEM DESTROYED  ░░░░░░░░░░░░░░░</span>');
+            print('&nbsp;');
+            printText('One command. No confirmation. No undo. No log.');
+            printText('THIS is why you are never root.');
+            print('&nbsp;');
+            print('<span class="rt-yellow">sudo exists so that danger is something you opt into</span>');
+            print('<span class="rt-yellow">one command at a time — with your name in the audit log.</span>');
+            print('&nbsp;');
+            printText('Respawning filesystem (a luxury real servers do not have)...','rt-dim');
+            setTimeout(function(){
+              FS=freshFS(); cwd='/root'; melting=false;
+              term.classList.remove('melting');
+              inp.disabled=false; inp.focus();
+              print('<span class="rt-green">done.</span>');
+              promptEl.textContent=promptStr();
+              out.scrollTop=out.scrollHeight;
+            },1400);
+          },900);
+        },500);
+      }
+      out.scrollTop=out.scrollHeight;
+    },110);
+  }
+
+  function run(raw){
+    var line=raw.trim();
+    print('<span class="rt-red">'+esc(promptStr())+'</span> '+esc(raw));
+    if(!line) return;
+    hist.push(raw); histIdx=hist.length;
+    var parts=line.split(/\s+/), cmd=parts[0], args=parts.slice(1);
+
+    if(/^rm$/.test(cmd) && args.join(' ').replace('--no-preserve-root','').trim().match(/^-rf\s+\/\*?$/)){ meltdown(); return; }
+
+    switch(cmd){
+      case 'help':
+        print('<span class="rt-dim">Available in this very real terminal:</span>');
+        printText('  ls [-a]   cd   pwd   cat   echo   touch   mkdir   rm');
+        printText('  whoami   id   hostname   uname   ps   top   kill   history');
+        printText('  date   clear   sudo   man   exit');
+        print('<span class="rt-dim">Everything else was deleted by the previous root user.</span>');
+        break;
+      case 'ls':{
+        var showHidden=args.indexOf('-a')!==-1||args.indexOf('-la')!==-1||args.indexOf('-al')!==-1;
+        var target=args.filter(function(a){return a[0]!=='-';})[0];
+        var r=resolve(target||cwd);
+        if(!r.node) printText('ls: cannot access \''+target+'\': No such file or directory');
+        else if(r.node.type==='f') printText(target);
+        else print(lsOut(r.node,showHidden));
+        break;}
+      case 'cd':{
+        var r2=resolve(args[0]||'~');
+        if(!r2.node) printText('bash: cd: '+args[0]+': No such file or directory');
+        else if(r2.node.type!=='d') printText('bash: cd: '+args[0]+': Not a directory');
+        else cwd=r2.path==='' ? '/' : r2.path;
+        break;}
+      case 'pwd': printText(cwd); break;
+      case 'cat':{
+        if(!args[0]){ printText('cat: reading from stdin as root? bold. (try: cat flag.txt)'); break; }
+        var r3=resolve(args[0]);
+        if(!r3.node) printText('cat: '+args[0]+': No such file or directory');
+        else if(r3.node.type==='d') printText('cat: '+args[0]+': Is a directory');
+        else printText(r3.node.content);
+        break;}
+      case 'echo': printText(args.join(' ').replace(/^"|"$/g,'')); break;
+      case 'whoami': print('<span class="rt-red">root</span> <span class="rt-dim">(unfortunately)</span>'); break;
+      case 'id': printText('uid=0(root) gid=0(root) groups=0(root)  <- all zeros. no rules apply to you. that is not a good thing.'); break;
+      case 'hostname': printText('fedora'); break;
+      case 'clear': out.innerHTML=''; break;
+      case 'sudo': print('<span class="rt-yellow">root does not need sudo. That is exactly the problem.</span>'); break;
+      case 'man': printText('No manual entry will save you now.'); break;
+      case 'rm':{
+        if(!args.length){ printText('rm: missing operand'); break; }
+        var f=args.filter(function(a){return a[0]!=='-';})[0];
+        if(!f){ printText('rm: missing operand'); break; }
+        var r4=resolve(f);
+        if(!r4.node) printText('rm: cannot remove \''+f+'\': No such file or directory');
+        else if(r4.node.type==='d'&&args.indexOf('-r')===-1&&args.indexOf('-rf')===-1) printText('rm: cannot remove \''+f+'\': Is a directory (forgot -r? classic.)');
+        else { delete r4.parentChildren[r4.name]; printText('(gone. no trash bin. no undo. root life.)','rt-dim'); }
+        break;}
+      case 'exit': case 'logout': closeTerm(true); break;
+      case 'vim': case 'vi': printText('E37: You would never leave. Request denied for your own safety.'); break;
+      case 'systemctl': printText('Failed to connect to bus: the previous root deleted systemd.'); break;
+      case 'uname': printText(args.indexOf('-a')!==-1?'Linux fedora 6.6.6-construct #1 SMP PREEMPT_DYNAMIC (deep breath) x86_64 GNU/Linux':'Linux'); break;
+      case 'dnf': case 'yum': case 'apt': printText('Error: no package manager found. The previous root uninstalled it\nto "save disk space". The disk was 2% full.'); break;
+      case 'ps':
+        printText('    PID TTY          TIME CMD');
+        printText('      1 ?        00:00:00 systemd (deceased)');
+        printText('    666 pts/0    00:00:01 bash');
+        printText('   1999 pts/0    00:13:37 agent_smith');
+        printText('   2000 pts/0    00:13:37 agent_smith');
+        printText('   2001 pts/0    00:13:37 agent_smith');
+        print('<span class="rt-dim">   (there were fewer of those a second ago)</span>');
+        break;
+      case 'top': printText('Tasks: 3 total, 3 running, 0 sleeping\n%Cpu(s): 99.9 us\n\n   PID USER   %CPU  COMMAND\n  1999 smith  99.9  agent_smith\n  2000 smith  99.9  agent_smith  (press q in your imagination to quit)'); break;
+      case 'kill': case 'pkill': case 'killall':
+        if(line.indexOf('smith')!==-1||line.indexOf('1999')!==-1||line.indexOf('2000')!==-1||line.indexOf('2001')!==-1){
+          printText('kill: (1999): process terminated');
+          print('<span class="rt-dim">...PID 4097 spawned: agent_smith</span>');
+          print('<span class="rt-yellow">You cannot kill an Agent. You can only make more of him.</span>');
+        } else printText('kill: '+(args[0]||'?')+': arguments must be process or job IDs');
+        break;
+      case 'history':{
+        var h=resolve('/root/.bash_history');
+        if(h.node) printText(h.node.content);
+        break;}
+      case 'date': printText('There is no time down here.'); break;
+      case 'touch':{
+        if(!args[0]){ printText('touch: missing file operand'); break; }
+        var tp=resolve(args[0]);
+        if(tp.node){ printText(''); }
+        else{ var tParent=resolve(args[0].indexOf('/')!==-1?args[0].slice(0,args[0].lastIndexOf('/'))||'/':cwd);
+          var tName=args[0].slice(args[0].lastIndexOf('/')+1);
+          if(tParent.node&&tParent.node.type==='d') tParent.node.children[tName]={type:'f',content:''};
+          else printText('touch: cannot touch \''+args[0]+'\': No such file or directory'); }
+        break;}
+      case 'mkdir':{
+        if(!args[0]){ printText('mkdir: missing operand'); break; }
+        var mp=resolve(args[0]);
+        if(mp.node){ printText('mkdir: cannot create directory \''+args[0]+'\': File exists'); break; }
+        var mParent=resolve(args[0].indexOf('/')!==-1?args[0].slice(0,args[0].lastIndexOf('/'))||'/':cwd);
+        var mName=args[0].slice(args[0].lastIndexOf('/')+1);
+        if(mParent.node&&mParent.node.type==='d') mParent.node.children[mName]={type:'d',children:{}};
+        else printText('mkdir: cannot create directory \''+args[0]+'\': No such file or directory');
+        break;}
+      case 'matrix': printText('The Matrix is a system, Neo. That system is our enemy.\nAlso it is just systemd with better marketing.'); break;
+      case 'redpill': print('<span class="rt-green">You stay in Wonderland, and I show you how deep the rabbit hole goes.</span>'); print('<span class="rt-dim">(a white rabbit was last seen in ~. try following it.)</span>'); break;
+      case 'bluepill':
+        print('<span class="rt-dim">The story ends. You wake up in your bed and believe</span>');
+        print('<span class="rt-dim">whatever you want to believe...</span>');
+        inp.disabled=true;
+        setTimeout(function(){ inp.disabled=false; closeTerm(true); },1800);
+        break;
+      default: printText('bash: '+cmd+': command not found');
+    }
+  }
+
+  function boot(){
+    out.innerHTML='';
+    print('<span class="rt-green" style="opacity:.45">Wake up&hellip;</span>');
+    print('<span class="rt-dim">Last login: never, because nobody is supposed to do this</span>');
+    print('&nbsp;');
+    print('<span class="rt-red">You had ONE rule.</span>');
+    print('&nbsp;');
+    printText('The fine print said never. You typed it anyway. Welcome to root:');
+    printText('no sudo, no confirmation prompts, no audit trail, no safety net.');
+    print('&nbsp;');
+    print('<span class="rt-dim">Type</span> <span class="rt-green">help</span> <span class="rt-dim">to see what survived. Type</span> <span class="rt-green">exit</span> <span class="rt-dim">to return to responsibility.</span>');
+    print('&nbsp;');
+  }
+
+  function build(){
+    overlay=document.createElement('div'); overlay.id='rootTermOverlay';
+    overlay.innerHTML='<div id="rootTerm">'+
+      '<div id="rootTermHead"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>'+
+      '<span class="ttl">root@fedora — you were warned</span>'+
+      '<button id="rootTermClose" title="exit">✕</button></div>'+
+      '<div id="rootTermOut"></div>'+
+      '<div id="rootTermLine"><span class="rt-prompt"></span><input id="rootTermInput" autocomplete="off" spellcheck="false"></div></div>';
+    document.body.appendChild(overlay);
+    out=document.getElementById('rootTermOut');
+    inp=document.getElementById('rootTermInput');
+    promptEl=overlay.querySelector('.rt-prompt');
+    term=document.getElementById('rootTerm');
+    document.getElementById('rootTermClose').addEventListener('click',function(){ closeTerm(true); });
+    overlay.addEventListener('mousedown',function(e){ if(e.target===overlay) return; inp.focus(); });
+    inp.addEventListener('keydown',function(e){
+      if(melting) return;
+      if(e.key==='Enter'){ var v=inp.value; inp.value=''; run(v); promptEl.textContent=promptStr(); }
+      else if(e.key==='ArrowUp'){ if(histIdx>0){histIdx--; inp.value=hist[histIdx];} e.preventDefault(); }
+      else if(e.key==='ArrowDown'){ if(histIdx<hist.length-1){histIdx++; inp.value=hist[histIdx];} else {histIdx=hist.length; inp.value='';} e.preventDefault(); }
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&overlay.style.display!=='none'&&!melting) closeTerm(true); });
+  }
+
+  function closeTerm(resetUser){
+    overlay.style.display='none';
+    if(resetUser){
+      var u=document.getElementById('unameInput');
+      if(u){ u.value='knox'; u.dispatchEvent(new Event('input')); }
+    }
+  }
+
+  window.openRootTerminal=function(){
+    if(!overlay) build();
+    if(overlay.style.display!=='none'&&out.childNodes.length&&overlay.style.display!==''){ /* already open */ }
+    overlay.style.display='flex';
+    FS=freshFS(); cwd='/root'; melting=false; term.classList.remove('melting'); inp.disabled=false;
+    boot();
+    promptEl.textContent=promptStr();
+    setTimeout(function(){ inp.focus(); },50);
+  };
+})();
+</script>
+
+
+<script>
+/* ══ v2.8: full-page row filter + count ══ */
+(function(){
+  var input=document.getElementById('sideSearch'), count=document.getElementById('searchCount');
+  if(!input) return;
+  var rows=Array.prototype.slice.call(document.querySelectorAll('.tbl-wrap tbody tr'));
+  input.addEventListener('input', function(){
+    var q=input.value.trim().toLowerCase(), hits=0;
+    if(q.length<2){
+      rows.forEach(function(r){r.classList.remove('filter-hide');});
+      document.querySelectorAll('.tbl-wrap.filter-empty').forEach(function(t){t.classList.remove('filter-empty');});
+      count.textContent='';
+      return;
+    }
+    rows.forEach(function(r){
+      var hit=r.textContent.toLowerCase().indexOf(q)!==-1;
+      r.classList.toggle('filter-hide',!hit);
+      if(hit) hits++;
+    });
+    document.querySelectorAll('.tbl-wrap').forEach(function(t){
+      var body=t.querySelector('tbody');
+      if(!body) return;
+      var any=body.querySelector('tr:not(.filter-hide)');
+      t.classList.toggle('filter-empty',!any);
+    });
+    count.textContent=hits+' matching row'+(hits===1?'':'s')+' on the page';
+  });
+  /* keybinds: / focus, Esc clear */
+  document.addEventListener('keydown', function(e){
+    var tag=(document.activeElement&&document.activeElement.tagName)||'';
+    if(e.key==='/'&&tag!=='INPUT'&&tag!=='TEXTAREA'){e.preventDefault();input.focus();input.select();}
+    if(e.key==='Escape'&&document.activeElement===input){input.value='';input.dispatchEvent(new Event('input'));input.blur();}
+  });
+})();
+/* ══ v2.8: click-to-copy on command cells ══ */
+(function(){
+  function copy(text,el){
+    function done(){el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},900);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,function(){fallback();});}
+    else fallback();
+    function fallback(){var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}
+  }
+  document.addEventListener('click', function(e){
+    var code=e.target.closest&&e.target.closest('td code');
+    if(!code) return;
+    if(window.getSelection&&String(window.getSelection())!=='') return; /* don't fight text selection */
+    copy(code.textContent,code);
+  });
+  document.querySelectorAll('td code').forEach(function(c){c.title='Click to copy';});
+})();
+/* ══ v2.8: remember username, collapsed groups, scroll position ══ */
+(function(){
+  var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}};
+  /* username (never persist or restore "root" — the terminal is an event, not a state) */
+  var un=document.getElementById('unameInput');
+  if(un){
+    var saved=LS('cheat.uname');
+    if(saved&&saved.toLowerCase()!=='root'){un.value=saved;un.dispatchEvent(new Event('input'));}
+    un.addEventListener('input',function(){var v=un.value.trim();if(v.toLowerCase()!=='root')LS('cheat.uname',v);});
+  }
+  /* details open/closed */
+  document.querySelectorAll('details').forEach(function(d,i){
+    var k='cheat.details.'+i, s=LS(k);
+    if(s==='0')d.open=false; else if(s==='1')d.open=true;
+    d.addEventListener('toggle',function(){LS(k,d.open?'1':'0');});
+  });
+  /* scroll position */
+  var t=null;
+  window.addEventListener('scroll',function(){clearTimeout(t);t=setTimeout(function(){LS('cheat.scroll',String(window.scrollY));},150);});
+  var y=parseInt(LS('cheat.scroll')||'0',10);
+  if(y>0) window.scrollTo(0,y);
+})();
+/* ══ v2.8: scrollspy — highlight current section in sidebar ══ */
+(function(){
+  var heads=Array.prototype.slice.call(document.querySelectorAll('h2[id]'));
+  var links={};
+  document.querySelectorAll('.side-link').forEach(function(a){links[a.getAttribute('href')]=a;});
+  var current=null, tick=false;
+  function update(){
+    tick=false;
+    var pos=window.scrollY+130, active=null;
+    for(var i=0;i<heads.length;i++){if(heads[i].offsetTop<=pos)active=heads[i];else break;}
+    var id=active?'#'+active.id:null;
+    if(id===current)return;
+    if(current&&links[current])links[current].classList.remove('active');
+    if(id&&links[id])links[id].classList.add('active');
+    current=id;
+  }
+  window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(update);}});
+  update();
+})();
+/* ══ v2.8: open all sections for printing ══ */
+(function(){
+  var were=[];
+  window.addEventListener('beforeprint',function(){
+    were=[];document.querySelectorAll('details').forEach(function(d){were.push(d.open);d.open=true;});
+  });
+  window.addEventListener('afterprint',function(){
+    document.querySelectorAll('details').forEach(function(d,i){if(i<were.length)d.open=were[i];});
+  });
+})();
+</script>
 </body>
 </html>
